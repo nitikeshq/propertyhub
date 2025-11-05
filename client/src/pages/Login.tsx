@@ -26,7 +26,8 @@ export default function Login() {
         title: "Welcome back!",
         description: "You have successfully logged in.",
       });
-      setLocation("/dashboard");
+      // Redirect to broker dashboard (admin dashboard will be separate route)
+      setLocation("/broker-dashboard");
     } catch (error) {
       toast({
         title: "Login failed",

@@ -1,4 +1,5 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import memorystore from "memorystore";
@@ -76,16 +77,10 @@ async function requireAdmin(req: AuthRequest, res: Response, next: NextFunction)
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from uploads directory
-  app.use('/uploads', (req, res, next) => {
-    const express = require('express');
-    express.static('uploads')(req, res, next);
-  });
+  app.use('/uploads', express.static('uploads'));
 
   // Serve static files from attached_assets directory
-  app.use('/attached_assets', (req, res, next) => {
-    const express = require('express');
-    express.static('attached_assets')(req, res, next);
-  });
+  app.use('/attached_assets', express.static('attached_assets'));
 
   // Session middleware
   app.use(
