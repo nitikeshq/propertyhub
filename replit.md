@@ -11,7 +11,7 @@ MVP complete with enhanced landing page and INR currency support
 - **Backend**: Express.js with PostgreSQL database
 - **Authentication**: Session-based with bcrypt password hashing, PostgreSQL session store for persistence
 - **File Storage**: Replit Object Storage for property images
-- **Notifications**: Email (Resend) and SMS (Twilio) for lead notifications
+- **Notifications**: Email (Gmail SMTP via nodemailer) and SMS (Twilio) for lead notifications
 
 ## Key Features
 1. **Find Properties**: Browse residential, commercial properties, and land with advanced search, filters, and sorting
@@ -30,9 +30,10 @@ MVP complete with enhanced landing page and INR currency support
 - DATABASE_URL (PostgreSQL - auto-configured)
 - OBJECT_STORAGE vars (auto-configured)
 - SESSION_SECRET (auto-configured)
-- RESEND_API_KEY (optional - for email notifications)
+- GMAIL_USER, GMAIL_APP_PASSWORD (required for email notifications via Gmail SMTP)
+- ADMIN_EMAIL (required - email address to receive lead notifications)
 - TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER (optional - for SMS)
-- ADMIN_EMAIL, ADMIN_PHONE (optional - notification recipients)
+- ADMIN_PHONE (optional - phone number to receive SMS notifications)
 
 ## Tech Stack
 - React + TypeScript
@@ -41,7 +42,7 @@ MVP complete with enhanced landing page and INR currency support
 - Shadcn UI components
 - Tailwind CSS
 - Replit Object Storage
-- Resend (email)
+- Nodemailer with Gmail SMTP (email)
 - Twilio (SMS)
 
 ## Recent Updates (November 2025)
@@ -62,7 +63,7 @@ MVP complete with enhanced landing page and INR currency support
 - **Enterprise Login/Signup**: Modern split-screen design for authentication pages
 - **User Registration Enhancement**: Sign-up now offers "Property Broker" and "Property Owner" account types instead of allowing super admin registration
 - **Currency Localization**: All prices changed from USD to INR with proper Indian locale formatting (₹ symbol, comma separators)
-- **Email Notifications**: Configured with Resend API, uses INR format and Indian timezone for lead notifications
+- **Email Notifications**: Configured with Gmail SMTP (nodemailer), uses INR format and Indian timezone for lead notifications
 - **Admin Account**: Created super admin account for viewing all leads and managing the platform
 - **Database Schema Update**: Changed price fields from integer to bigint to support large Indian real estate prices (up to ₹900 crore+)
 - **Landing Page Enhancement**: 
@@ -76,8 +77,8 @@ MVP complete with enhanced landing page and INR currency support
 - **Stock Images**: Added professional real estate images stored in attached_assets/stock_images/
 
 ## Notes
-- Notifications (email/SMS) are configured - email via Resend, SMS via Twilio (optional)
-- Email/SMS notifications use INR currency format and Indian timezone
+- Notifications (email/SMS) are configured - email via Gmail SMTP (nodemailer), SMS via Twilio (optional)
+- Email notifications use INR currency format and Indian timezone
 - Images are stored in Replit Object Storage
 - Lead notifications are sent asynchronously to ADMIN_EMAIL and ADMIN_PHONE
 - Landing page features creative design with images, not simple text-only layout
