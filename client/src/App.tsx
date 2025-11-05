@@ -13,7 +13,8 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import PropertyDetail from "@/pages/PropertyDetail";
 import InteriorDesign from "@/pages/InteriorDesign";
-import Dashboard from "@/pages/Dashboard";
+import BrokerDashboard from "@/pages/BrokerDashboard";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 function Router() {
   return (
@@ -26,7 +27,8 @@ function Router() {
       <Route path="/register" component={Register} />
       <Route path="/property/:slug" component={PropertyDetail} />
       <Route path="/interior-design" component={InteriorDesign} />
-      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/dashboard" component={BrokerDashboard} />
+      <Route path="/admin-dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

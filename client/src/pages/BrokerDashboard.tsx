@@ -107,7 +107,7 @@ export default function BrokerDashboard() {
       
       const imageUrls = await Promise.all(
         uploadedUrls.map(async (url) => {
-          const response = await apiRequest("PUT", "/api/property-images", { imageURL: url });
+          const response: any = await apiRequest("PUT", "/api/property-images", { imageURL: url });
           return response.objectPath;
         })
       );
@@ -158,7 +158,7 @@ export default function BrokerDashboard() {
                 <Building2 className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">Broker Dashboard</h1>
+                <h1 className="text-xl font-bold">Dashboard</h1>
                 <p className="text-sm text-muted-foreground">Welcome, {user?.name}</p>
               </div>
             </div>
@@ -383,7 +383,7 @@ export default function BrokerDashboard() {
                       id="pincode"
                       data-testid="input-pincode"
                       placeholder="400001"
-                      value={formData.pincode}
+                      value={formData.pincode || ""}
                       onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
                     />
                   </div>
@@ -563,7 +563,13 @@ export default function BrokerDashboard() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="text-xl font-bold text-primary">
-                        ₹{property.price.toLocaleString('en-IN')}
+                        {property.listingType === 'rent' ? (
+                          <>₹{property.priceMin.toLocaleString('en-IN')}/mo</>
+                        ) : property.priceMax ? (
+                          <>₹{property.priceMin.toLocaleString('en-IN')} - ₹{property.priceMax.toLocaleString('en-IN')}</>
+                        ) : (
+                          <>₹{property.priceMin.toLocaleString('en-IN')}</>
+                        )}
                       </div>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Eye className="h-4 w-4 mr-1" />

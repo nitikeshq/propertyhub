@@ -135,6 +135,12 @@ export default function Home() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
+              <Link href="/register">
+                <Button size="lg" variant="outline" className="px-8 py-6 text-lg bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20" data-testid="button-list-property">
+                  List Your Property Now
+                  <Building2 className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
               <Link href="/interior-design">
                 <Button size="lg" variant="outline" className="px-8 py-6 text-lg bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20" data-testid="button-interior-cta">
                   Interior Design Services
