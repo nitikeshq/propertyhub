@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
-import memorystore from "memorystore";
+import connectPg from "connect-pg-simple";
 import multer from "multer";
 import path from "path";
 import { db } from "./db";
@@ -11,8 +11,9 @@ import { createUser, getUserByEmail, verifyPassword, getUserById } from "./auth"
 import { eq, desc, and } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { sendLeadNotifications } from "./notifications";
+import pg from "pg";
 
-const MemoryStore = memorystore(session);
+const PgStore = connectPg(session);
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -82,19 +83,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from attached_assets directory
   app.use('/attached_assets', express.static('attached_assets'));
 
-  // Session middleware
+  // Session middleware with PostgreSQL store
+  const pgPool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+
   app.use(
     session({
+      store: new PgStore({
+        pool: pgPool,
+        tableName: 'session',
+        createTableIfMissing: true,
+      }),
       secret: process.env.SESSION_SECRET || "property-hub-secret-key-change-in-production",
       resave: false,
       saveUninitialized: false,
-      store: new MemoryStore({
-        checkPeriod: 86400000, // 24 hours
-      }),
       cookie: {
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       },
     })
   );
