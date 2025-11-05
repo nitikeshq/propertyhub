@@ -23,7 +23,7 @@ MVP complete with enhanced landing page and INR currency support
 
 ## Database Schema
 - **users**: Broker, owner, and admin accounts with email/password auth
-- **properties**: Property listings with images, pricing, location details
+- **properties**: Property listings with images, videos, amenities, facilities, nearby places, pricing, location details
 - **leads**: Inquiries from buyers for properties or interior design
 
 ## Environment Variables Required
