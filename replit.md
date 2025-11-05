@@ -15,11 +15,14 @@ MVP complete with enhanced landing page and INR currency support
 
 ## Key Features
 1. **Find Properties**: Browse residential, commercial properties, and land with advanced search, filters, and sorting
+   - Only active (enabled) properties are shown to the public
 2. **Property Details**: Detailed property pages with SEO-friendly slugs and lead capture forms
 3. **Broker Portal**: Property listing management with image uploads
+   - Disabled properties show admin's reason for disabling
 4. **Admin Dashboard**: Tabbed interface with lead management and properties overview
-   - Leads tab: Status tracking and management
-   - Properties tab: View all properties with broker information (view-only)
+   - Leads tab: Status tracking and management with pagination
+   - Properties tab: View all properties with broker information, enable/disable listings with reason
+   - Admin can disable properties with a reason that is visible to the broker/owner
 5. **Interior Design**: Consultation request form
 6. **Notifications**: Email and SMS alerts for new leads
 

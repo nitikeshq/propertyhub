@@ -8,7 +8,7 @@ import path from "path";
 import { db } from "./db";
 import { users, properties, leads, insertPropertySchema, insertLeadSchema, updateLeadSchema, updatePropertySchema } from "@shared/schema";
 import { createUser, getUserByEmail, verifyPassword, getUserById } from "./auth";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { sendLeadNotifications } from "./notifications";
 import pg from "pg";
@@ -208,11 +208,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/properties", async (req, res) => {
     try {
       const brokerId = req.query.brokerId as string | undefined;
+      const includeDisabled = req.query.includeDisabled === "true";
 
       let propertiesQuery = db.select().from(properties);
 
+      const conditions = [];
       if (brokerId) {
-        propertiesQuery = propertiesQuery.where(eq(properties.brokerId, brokerId)) as any;
+        conditions.push(eq(properties.brokerId, brokerId));
+      }
+      // For public access (no brokerId), only show active properties
+      if (!brokerId && !includeDisabled) {
+        conditions.push(eq(properties.isActive, true));
+      }
+
+      if (conditions.length > 0) {
+        propertiesQuery = propertiesQuery.where(
+          conditions.length === 1 ? conditions[0] : sql`${conditions[0]} AND ${conditions[1]}`
+        ) as any;
       }
 
       const allProperties = await propertiesQuery.orderBy(desc(properties.createdAt));
@@ -361,6 +373,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to delete property:", error);
       res.status(500).json({ message: "Failed to delete property" });
+    }
+  });
+
+  // Admin: Toggle property active status
+  app.patch("/api/properties/:id/toggle-status", requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const propertyId = req.params.id;
+      const { isActive, disabledReason } = req.body;
+
+      const [existing] = await db
+        .select()
+        .from(properties)
+        .where(eq(properties.id, propertyId));
+
+      if (!existing) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      const [updated] = await db
+        .update(properties)
+        .set({ 
+          isActive: isActive,
+          disabledReason: isActive ? null : disabledReason,
+          updatedAt: new Date()
+        })
+        .where(eq(properties.id, propertyId))
+        .returning();
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Failed to toggle property status:", error);
+      res.status(500).json({ message: "Failed to toggle property status" });
     }
   });
 

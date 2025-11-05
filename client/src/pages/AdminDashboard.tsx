@@ -13,8 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Users, Mail, Home as HomeIcon, LogOut, Search, Eye, Building2, ListChecks, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, Mail, Home as HomeIcon, LogOut, Search, Eye, Building2, ListChecks, ChevronLeft, ChevronRight, Ban, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type PropertyWithBroker = Property & { broker: User };
 
@@ -33,6 +35,8 @@ export default function AdminDashboard() {
   const [propertyTypeFilter, setPropertyTypeFilter] = useState("all");
   const [leadsPage, setLeadsPage] = useState(1);
   const [propertiesPage, setPropertiesPage] = useState(1);
+  const [toggleStatusProperty, setToggleStatusProperty] = useState<PropertyWithBroker | null>(null);
+  const [disableReason, setDisableReason] = useState("");
 
   const { data: leads, isLoading } = useQuery<LeadWithProperty[]>({
     queryKey: ["/api/leads"],
@@ -58,6 +62,30 @@ export default function AdminDashboard() {
       toast({
         title: "Update failed",
         description: "Could not update lead status.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const togglePropertyStatusMutation = useMutation({
+    mutationFn: async ({ id, isActive, disabledReason }: { id: string; isActive: boolean; disabledReason?: string }) => {
+      return await apiRequest("PATCH", `/api/properties/${id}/toggle-status`, { isActive, disabledReason });
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: variables.isActive ? "Property enabled" : "Property disabled",
+        description: variables.isActive 
+          ? "Property is now visible to the public." 
+          : "Property has been disabled and hidden from public view.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/properties/with-brokers"] });
+      setToggleStatusProperty(null);
+      setDisableReason("");
+    },
+    onError: () => {
+      toast({
+        title: "Update failed",
+        description: "Could not update property status.",
         variant: "destructive",
       });
     },
@@ -142,6 +170,33 @@ export default function AdminDashboard() {
 
   const handlePropertiesFilterChange = () => {
     setPropertiesPage(1);
+  };
+
+  const handleTogglePropertyStatus = (property: PropertyWithBroker) => {
+    if (property.isActive) {
+      // Disabling - show dialog for reason
+      setToggleStatusProperty(property);
+    } else {
+      // Enabling - no reason needed
+      togglePropertyStatusMutation.mutate({ id: property.id, isActive: true });
+    }
+  };
+
+  const handleConfirmDisable = () => {
+    if (!toggleStatusProperty || !disableReason.trim()) {
+      toast({
+        title: "Reason required",
+        description: "Please provide a reason for disabling this property.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    togglePropertyStatusMutation.mutate({
+      id: toggleStatusProperty.id,
+      isActive: false,
+      disabledReason: disableReason,
+    });
   };
 
   return (
@@ -498,6 +553,7 @@ export default function AdminDashboard() {
                           <TableHead>Price Range</TableHead>
                           <TableHead>Location</TableHead>
                           <TableHead>Broker</TableHead>
+                          <TableHead>Status</TableHead>
                           <TableHead>Date</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -538,6 +594,26 @@ export default function AdminDashboard() {
                               ) : (
                                 <span className="text-muted-foreground">-</span>
                               )}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant={property.isActive ? "default" : "destructive"}
+                                size="sm"
+                                onClick={() => handleTogglePropertyStatus(property)}
+                                data-testid={`button-toggle-status-${property.id}`}
+                              >
+                                {property.isActive ? (
+                                  <>
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    Active
+                                  </>
+                                ) : (
+                                  <>
+                                    <Ban className="h-4 w-4 mr-2" />
+                                    Disabled
+                                  </>
+                                )}
+                              </Button>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                               {format(new Date(property.createdAt), "MMM dd, yyyy")}
@@ -688,10 +764,70 @@ export default function AdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Disable Property Dialog */}
+      <Dialog open={!!toggleStatusProperty} onOpenChange={() => {
+        setToggleStatusProperty(null);
+        setDisableReason("");
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Disable Property</DialogTitle>
+          </DialogHeader>
+          {toggleStatusProperty && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  You are about to disable the following property:
+                </p>
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="font-medium">{toggleStatusProperty.title}</p>
+                    <p className="text-sm text-muted-foreground">{toggleStatusProperty.location}, {toggleStatusProperty.city}</p>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium mb-2 block">
+                  Reason for disabling <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  data-testid="textarea-disable-reason"
+                  placeholder="Enter the reason for disabling this property. This will be shown to the broker/owner."
+                  value={disableReason}
+                  onChange={(e) => setDisableReason(e.target.value)}
+                  rows={4}
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  This reason will be visible to the property owner/broker.
+                </p>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setToggleStatusProperty(null);
+                    setDisableReason("");
+                  }}
+                  data-testid="button-cancel-disable"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleConfirmDisable}
+                  disabled={togglePropertyStatusMutation.isPending}
+                  data-testid="button-confirm-disable"
+                >
+                  {togglePropertyStatusMutation.isPending ? "Disabling..." : "Disable Property"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
-}
-
-function Label({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={className}>{children}</div>;
 }

@@ -48,6 +48,8 @@ export const properties = pgTable("properties", {
   nearbyPlaces: text("nearby_places").array().notNull().default(sql`ARRAY[]::text[]`),
   featured: boolean("featured").notNull().default(false),
   views: integer("views").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  disabledReason: text("disabled_reason"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
