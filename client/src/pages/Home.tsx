@@ -258,7 +258,7 @@ export default function Home() {
                                 </div>
 
                                 <div className="mb-4">
-                                  <div className="text-2xl font-bold text-primary">
+                                  <div className="text-lg font-bold text-primary">
                                     {property.listingType === 'rent' ? (
                                       <>₹{property.priceMin.toLocaleString('en-IN')}<span className="text-sm font-normal text-muted-foreground">/month</span></>
                                     ) : property.priceMax ? (

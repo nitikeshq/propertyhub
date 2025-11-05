@@ -24,11 +24,6 @@ export function Footer() {
                   Register
                 </span>
               </Link>
-              <Link href="/broker">
-                <span className="block hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-dashboard">
-                  Dashboard
-                </span>
-              </Link>
             </div>
           </div>
           <div>

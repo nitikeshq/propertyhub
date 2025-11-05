@@ -306,7 +306,7 @@ export default function FindProperties() {
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <div className="text-2xl font-bold text-primary" data-testid={`text-price-${property.id}`}>
+                        <div className="text-lg font-bold text-primary" data-testid={`text-price-${property.id}`}>
                           {formatPrice(property)}
                         </div>
                         <Badge variant="outline" className="capitalize text-xs" data-testid={`badge-listing-type-${property.id}`}>
