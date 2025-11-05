@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Property } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Building2, MapPin, Bed, Bath, Square, TrendingUp, Users, Shield, ArrowRight, ChevronLeft, ChevronRight, Phone, Mail } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Building2, MapPin, Bed, Bath, Square, TrendingUp, Users, Shield, ArrowRight, ChevronLeft, ChevronRight, Phone, Mail, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Navigation } from "@/components/Navigation";
@@ -20,7 +21,12 @@ export default function Home() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  // Search state
+  const [searchCity, setSearchCity] = useState("");
+  const [searchType, setSearchType] = useState<string>("all");
 
   // Lead form state
   const [leadForm, setLeadForm] = useState({
@@ -100,6 +106,16 @@ export default function Home() {
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Build query params
+    const params = new URLSearchParams();
+    if (searchCity) params.set("city", searchCity);
+    if (searchType && searchType !== "all") params.set("type", searchType);
+    
+    setLocation(`/properties?${params.toString()}`);
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
@@ -128,13 +144,41 @@ export default function Home() {
             <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto">
               Discover premium residential, commercial spaces, and land opportunities across major cities
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/properties">
-                <Button size="lg" className="px-8 py-6 text-lg" data-testid="button-find-properties">
-                  Find Properties
-                  <ArrowRight className="ml-2 h-5 w-5" />
+
+            {/* Search Bar */}
+            <form onSubmit={handleSearch} className="max-w-4xl mx-auto mb-8">
+              <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-3 flex flex-col md:flex-row gap-3">
+                <div className="flex-1">
+                  <Input
+                    type="text"
+                    placeholder="Enter City (e.g., Mumbai, Delhi, Bangalore)"
+                    value={searchCity}
+                    onChange={(e) => setSearchCity(e.target.value)}
+                    className="h-14 text-base border-0 focus-visible:ring-0 bg-transparent"
+                    data-testid="input-search-city"
+                  />
+                </div>
+                <div className="md:w-56">
+                  <Select value={searchType} onValueChange={setSearchType}>
+                    <SelectTrigger className="h-14 text-base border-0 focus:ring-0 bg-transparent" data-testid="select-search-type">
+                      <SelectValue placeholder="Property Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="residential">Residential</SelectItem>
+                      <SelectItem value="commercial">Commercial</SelectItem>
+                      <SelectItem value="land">Land</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button type="submit" size="lg" className="h-14 px-8 text-base" data-testid="button-search">
+                  <Search className="h-5 w-5 mr-2" />
+                  Search
                 </Button>
-              </Link>
+              </div>
+            </form>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register">
                 <Button size="lg" variant="outline" className="px-8 py-6 text-lg bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20" data-testid="button-list-property">
                   List Your Property Now
