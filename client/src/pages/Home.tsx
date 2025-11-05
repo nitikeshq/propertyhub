@@ -147,34 +147,62 @@ export default function Home() {
 
             {/* Search Bar */}
             <form onSubmit={handleSearch} className="max-w-4xl mx-auto mb-8">
-              <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-3 flex flex-col md:flex-row gap-3">
-                <div className="flex-1">
+              <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4">
+                {/* Property Type Tabs */}
+                <div className="flex gap-2 mb-4 justify-center flex-wrap">
+                  <Button
+                    type="button"
+                    variant={searchType === "all" ? "default" : "outline"}
+                    onClick={() => setSearchType("all")}
+                    className="min-w-[100px]"
+                    data-testid="button-type-all"
+                  >
+                    All Types
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={searchType === "residential" ? "default" : "outline"}
+                    onClick={() => setSearchType("residential")}
+                    className="min-w-[100px]"
+                    data-testid="button-type-residential"
+                  >
+                    Residential
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={searchType === "commercial" ? "default" : "outline"}
+                    onClick={() => setSearchType("commercial")}
+                    className="min-w-[100px]"
+                    data-testid="button-type-commercial"
+                  >
+                    Commercial
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={searchType === "land" ? "default" : "outline"}
+                    onClick={() => setSearchType("land")}
+                    className="min-w-[100px]"
+                    data-testid="button-type-land"
+                  >
+                    Land
+                  </Button>
+                </div>
+                
+                {/* Search Input */}
+                <div className="flex gap-3">
                   <Input
                     type="text"
                     placeholder="Enter City (e.g., Mumbai, Delhi, Bangalore)"
                     value={searchCity}
                     onChange={(e) => setSearchCity(e.target.value)}
-                    className="h-14 text-base border-0 focus-visible:ring-0 bg-transparent"
+                    className="h-14 text-base"
                     data-testid="input-search-city"
                   />
+                  <Button type="submit" size="lg" className="h-14 px-8 text-base" data-testid="button-search">
+                    <Search className="h-5 w-5 mr-2" />
+                    Search
+                  </Button>
                 </div>
-                <div className="md:w-56">
-                  <Select value={searchType} onValueChange={setSearchType}>
-                    <SelectTrigger className="h-14 text-base border-0 focus:ring-0 bg-transparent" data-testid="select-search-type">
-                      <SelectValue placeholder="Property Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="residential">Residential</SelectItem>
-                      <SelectItem value="commercial">Commercial</SelectItem>
-                      <SelectItem value="land">Land</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button type="submit" size="lg" className="h-14 px-8 text-base" data-testid="button-search">
-                  <Search className="h-5 w-5 mr-2" />
-                  Search
-                </Button>
               </div>
             </form>
 
@@ -259,78 +287,75 @@ export default function Home() {
                         {featuredProperties
                           .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
                           .map((property) => (
-                            <Card
-                              key={property.id}
-                              data-testid={`card-property-${property.id}`}
-                              className="overflow-hidden hover-elevate active-elevate-2"
-                            >
-                              <div className="aspect-[4/3] bg-muted relative overflow-hidden">
-                                {property.images && property.images.length > 0 ? (
-                                  <img
-                                    src={property.images[0]}
-                                    alt={property.title}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-                                    <Building2 className="h-16 w-16 text-muted-foreground" />
-                                  </div>
-                                )}
-                                <Badge className="absolute top-3 right-3 capitalize">
-                                  {property.propertyType}
-                                </Badge>
-                              </div>
-
-                              <CardContent className="p-6">
-                                <h3 className="text-xl font-semibold mb-2 line-clamp-2">{property.title}</h3>
-                                <div className="flex items-center text-muted-foreground mb-4">
-                                  <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                                  <span className="text-sm line-clamp-1">{property.location}, {property.city}</span>
-                                </div>
-
-                                <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
-                                  {property.bedrooms && (
-                                    <div className="flex items-center gap-1">
-                                      <Bed className="h-4 w-4" />
-                                      <span>{property.bedrooms}</span>
+                            <Link key={property.id} href={`/property/${property.id}`}>
+                              <Card
+                                data-testid={`card-property-${property.id}`}
+                                className="overflow-hidden hover-elevate active-elevate-2 cursor-pointer"
+                              >
+                                <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+                                  {property.images && property.images.length > 0 ? (
+                                    <img
+                                      src={property.images[0]}
+                                      alt={property.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                                      <Building2 className="h-16 w-16 text-muted-foreground" />
                                     </div>
                                   )}
-                                  {property.bathrooms && (
-                                    <div className="flex items-center gap-1">
-                                      <Bath className="h-4 w-4" />
-                                      <span>{property.bathrooms}</span>
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-1">
-                                    <Square className="h-4 w-4" />
-                                    <span>{property.area.toLocaleString()}</span>
-                                  </div>
-                                </div>
-
-                                <div className="mb-4">
-                                  <div className="text-lg font-bold text-primary">
-                                    {property.listingType === 'rent' ? (
-                                      <>₹{property.priceMin.toLocaleString('en-IN')}<span className="text-sm font-normal text-muted-foreground">/month</span></>
-                                    ) : property.priceMax ? (
-                                      <>₹{property.priceMin.toLocaleString('en-IN')} - ₹{property.priceMax.toLocaleString('en-IN')}</>
-                                    ) : (
-                                      <>₹{property.priceMin.toLocaleString('en-IN')}</>
-                                    )}
-                                  </div>
-                                  <Badge variant="outline" className="mt-1 capitalize text-xs">
-                                    For {property.listingType}
+                                  <Badge className="absolute top-3 right-3 capitalize">
+                                    {property.propertyType}
                                   </Badge>
                                 </div>
 
-                                <Button
-                                  className="w-full"
-                                  onClick={() => handleRequestDetails(property)}
-                                  data-testid={`button-request-details-${property.id}`}
-                                >
-                                  Request Details
-                                </Button>
-                              </CardContent>
-                            </Card>
+                                <CardContent className="p-6">
+                                  <h3 className="text-xl font-semibold mb-2 line-clamp-2">{property.title}</h3>
+                                  <div className="flex items-center text-muted-foreground mb-4">
+                                    <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                                    <span className="text-sm line-clamp-1">{property.location}, {property.city}</span>
+                                  </div>
+
+                                  <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
+                                    {property.bedrooms && (
+                                      <div className="flex items-center gap-1">
+                                        <Bed className="h-4 w-4" />
+                                        <span>{property.bedrooms}</span>
+                                      </div>
+                                    )}
+                                    {property.bathrooms && (
+                                      <div className="flex items-center gap-1">
+                                        <Bath className="h-4 w-4" />
+                                        <span>{property.bathrooms}</span>
+                                      </div>
+                                    )}
+                                    <div className="flex items-center gap-1">
+                                      <Square className="h-4 w-4" />
+                                      <span>{property.area.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="mb-4">
+                                    <div className="text-lg font-bold text-primary">
+                                      {property.listingType === 'rent' ? (
+                                        <>₹{property.priceMin.toLocaleString('en-IN')}<span className="text-sm font-normal text-muted-foreground">/month</span></>
+                                      ) : property.priceMax ? (
+                                        <>₹{property.priceMin.toLocaleString('en-IN')} - ₹{property.priceMax.toLocaleString('en-IN')}</>
+                                      ) : (
+                                        <>₹{property.priceMin.toLocaleString('en-IN')}</>
+                                      )}
+                                    </div>
+                                    <Badge variant="outline" className="mt-1 capitalize text-xs">
+                                      For {property.listingType}
+                                    </Badge>
+                                  </div>
+
+                                  <div className="text-sm text-muted-foreground">
+                                    Click to view details
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </Link>
                           ))}
                       </div>
                     </div>
