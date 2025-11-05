@@ -48,6 +48,11 @@ MVP complete with enhanced landing page and INR currency support
 - Twilio (SMS)
 
 ## Recent Updates (November 2025)
+- **Admin Dashboard Pagination**: Both Leads and Properties tables now support pagination
+  - 10 items per page for better performance and usability
+  - Previous/Next navigation buttons with page indicators
+  - Automatic page reset when filters change
+  - Shows current range and total count
 - **Session Persistence**: Upgraded from in-memory sessions to PostgreSQL-backed session store (connect-pg-simple)
   - Sessions now persist across server restarts
   - 30-day cookie lifetime for extended user sessions

@@ -13,10 +13,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Users, Mail, Home as HomeIcon, LogOut, Search, Eye, Building2, ListChecks } from "lucide-react";
+import { Users, Mail, Home as HomeIcon, LogOut, Search, Eye, Building2, ListChecks, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 
 type PropertyWithBroker = Property & { broker: User };
+
+const ITEMS_PER_PAGE = 10;
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -29,6 +31,8 @@ export default function AdminDashboard() {
   const [selectedLead, setSelectedLead] = useState<LeadWithProperty | null>(null);
   const [propertySearchQuery, setPropertySearchQuery] = useState("");
   const [propertyTypeFilter, setPropertyTypeFilter] = useState("all");
+  const [leadsPage, setLeadsPage] = useState(1);
+  const [propertiesPage, setPropertiesPage] = useState(1);
 
   const { data: leads, isLoading } = useQuery<LeadWithProperty[]>({
     queryKey: ["/api/leads"],
@@ -116,6 +120,29 @@ export default function AdminDashboard() {
 
     return matchesSearch && matchesType;
   });
+
+  // Pagination calculations for leads
+  const totalLeadsPages = Math.ceil(filteredLeads.length / ITEMS_PER_PAGE);
+  const paginatedLeads = filteredLeads.slice(
+    (leadsPage - 1) * ITEMS_PER_PAGE,
+    leadsPage * ITEMS_PER_PAGE
+  );
+
+  // Pagination calculations for properties
+  const totalPropertiesPages = Math.ceil(filteredProperties.length / ITEMS_PER_PAGE);
+  const paginatedProperties = filteredProperties.slice(
+    (propertiesPage - 1) * ITEMS_PER_PAGE,
+    propertiesPage * ITEMS_PER_PAGE
+  );
+
+  // Reset page when filters change
+  const handleLeadsFilterChange = () => {
+    setLeadsPage(1);
+  };
+
+  const handlePropertiesFilterChange = () => {
+    setPropertiesPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -230,10 +257,19 @@ export default function AdminDashboard() {
                   placeholder="Search by name, email, or phone..."
                   className="pl-10"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    handleLeadsFilterChange();
+                  }}
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select 
+                value={statusFilter} 
+                onValueChange={(value) => {
+                  setStatusFilter(value);
+                  handleLeadsFilterChange();
+                }}
+              >
                 <SelectTrigger data-testid="select-status-filter" className="w-full md:w-48">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -247,7 +283,13 @@ export default function AdminDashboard() {
                   <SelectItem value="closed_lost">Closed Lost</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <Select 
+                value={typeFilter} 
+                onValueChange={(value) => {
+                  setTypeFilter(value);
+                  handleLeadsFilterChange();
+                }}
+              >
                 <SelectTrigger data-testid="select-type-filter" className="w-full md:w-48">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
@@ -293,7 +335,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredLeads.map((lead) => (
+                    {paginatedLeads.map((lead) => (
                       <TableRow key={lead.id} data-testid={`row-lead-${lead.id}`}>
                         <TableCell className="font-medium">{lead.name}</TableCell>
                         <TableCell>
@@ -349,6 +391,40 @@ export default function AdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+
+                {/* Leads Pagination */}
+                {totalLeadsPages > 1 && (
+                  <div className="flex items-center justify-between mt-6">
+                    <div className="text-sm text-muted-foreground">
+                      Showing {((leadsPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(leadsPage * ITEMS_PER_PAGE, filteredLeads.length)} of {filteredLeads.length} leads
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLeadsPage(p => Math.max(1, p - 1))}
+                        disabled={leadsPage === 1}
+                        data-testid="button-prev-page-leads"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
+                      </Button>
+                      <div className="text-sm text-muted-foreground">
+                        Page {leadsPage} of {totalLeadsPages}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLeadsPage(p => Math.min(totalLeadsPages, p + 1))}
+                        disabled={leadsPage === totalLeadsPages}
+                        data-testid="button-next-page-leads"
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
@@ -367,10 +443,19 @@ export default function AdminDashboard() {
                       placeholder="Search by title, city, or location..."
                       className="pl-10"
                       value={propertySearchQuery}
-                      onChange={(e) => setPropertySearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        setPropertySearchQuery(e.target.value);
+                        handlePropertiesFilterChange();
+                      }}
                     />
                   </div>
-                  <Select value={propertyTypeFilter} onValueChange={setPropertyTypeFilter}>
+                  <Select 
+                    value={propertyTypeFilter} 
+                    onValueChange={(value) => {
+                      setPropertyTypeFilter(value);
+                      handlePropertiesFilterChange();
+                    }}
+                  >
                     <SelectTrigger data-testid="select-property-type-filter" className="w-full md:w-48">
                       <SelectValue placeholder="Property Type" />
                     </SelectTrigger>
@@ -418,7 +503,7 @@ export default function AdminDashboard() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredProperties.map((property) => (
+                        {paginatedProperties.map((property) => (
                           <TableRow key={property.id} data-testid={`row-property-${property.id}`}>
                             <TableCell className="font-medium">{property.title}</TableCell>
                             <TableCell>
@@ -468,6 +553,40 @@ export default function AdminDashboard() {
                         ))}
                       </TableBody>
                     </Table>
+
+                    {/* Properties Pagination */}
+                    {totalPropertiesPages > 1 && (
+                      <div className="flex items-center justify-between mt-6">
+                        <div className="text-sm text-muted-foreground">
+                          Showing {((propertiesPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(propertiesPage * ITEMS_PER_PAGE, filteredProperties.length)} of {filteredProperties.length} properties
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPropertiesPage(p => Math.max(1, p - 1))}
+                            disabled={propertiesPage === 1}
+                            data-testid="button-prev-page-properties"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                            Previous
+                          </Button>
+                          <div className="text-sm text-muted-foreground">
+                            Page {propertiesPage} of {totalPropertiesPages}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPropertiesPage(p => Math.min(totalPropertiesPages, p + 1))}
+                            disabled={propertiesPage === totalPropertiesPages}
+                            data-testid="button-next-page-properties"
+                          >
+                            Next
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
