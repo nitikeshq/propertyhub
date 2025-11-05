@@ -257,9 +257,19 @@ export default function Home() {
                                   </div>
                                 </div>
 
-                                <div className="text-2xl font-bold text-primary mb-4">
-                                  ₹{property.price.toLocaleString('en-IN')}
-                                  <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                                <div className="mb-4">
+                                  <div className="text-2xl font-bold text-primary">
+                                    {property.listingType === 'rent' ? (
+                                      <>₹{property.priceMin.toLocaleString('en-IN')}<span className="text-sm font-normal text-muted-foreground">/month</span></>
+                                    ) : property.priceMax ? (
+                                      <>₹{property.priceMin.toLocaleString('en-IN')} - ₹{property.priceMax.toLocaleString('en-IN')}</>
+                                    ) : (
+                                      <>₹{property.priceMin.toLocaleString('en-IN')}</>
+                                    )}
+                                  </div>
+                                  <Badge variant="outline" className="mt-1 capitalize text-xs">
+                                    For {property.listingType}
+                                  </Badge>
                                 </div>
 
                                 <Button
