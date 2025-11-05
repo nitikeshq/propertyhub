@@ -1,11 +1,18 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Building2, Menu, X } from "lucide-react";
+import { Building2, Menu, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Navigation() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    setMobileMenuOpen(false);
+  };
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -44,16 +51,33 @@ export function Navigation() {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost" data-testid="button-login">
-                Login
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button data-testid="button-signup">
-                Sign Up
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link href="/dashboard">
+                  <Button variant="ghost" data-testid="button-dashboard">
+                    <User className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button variant="outline" onClick={handleLogout} data-testid="button-logout">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" data-testid="button-login">
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button data-testid="button-signup">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -83,16 +107,33 @@ export function Navigation() {
               </Link>
             ))}
             <div className="flex flex-col gap-3 pt-4">
-              <Link href="/login">
-                <Button variant="outline" className="w-full" onClick={() => setMobileMenuOpen(false)} data-testid="button-mobile-login">
-                  Login
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button className="w-full" onClick={() => setMobileMenuOpen(false)} data-testid="button-mobile-signup">
-                  Sign Up
-                </Button>
-              </Link>
+              {user ? (
+                <>
+                  <Link href="/dashboard">
+                    <Button variant="outline" className="w-full" onClick={() => setMobileMenuOpen(false)} data-testid="button-mobile-dashboard">
+                      <User className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button variant="outline" className="w-full" onClick={handleLogout} data-testid="button-mobile-logout">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button variant="outline" className="w-full" onClick={() => setMobileMenuOpen(false)} data-testid="button-mobile-login">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button className="w-full" onClick={() => setMobileMenuOpen(false)} data-testid="button-mobile-signup">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
