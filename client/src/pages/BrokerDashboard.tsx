@@ -27,15 +27,21 @@ export default function BrokerDashboard() {
     title: "",
     description: "",
     propertyType: "residential",
-    price: 0,
+    listingType: "sale",
+    priceMin: 0,
+    priceMax: undefined,
     location: "",
     city: "",
     state: "",
+    pincode: "",
     bedrooms: undefined,
     bathrooms: undefined,
     area: 0,
     images: [],
+    videos: [],
     amenities: [],
+    facilities: [],
+    nearbyPlaces: [],
     status: "available",
     featured: false,
     brokerId: user?.id || "",
@@ -59,15 +65,21 @@ export default function BrokerDashboard() {
         title: "",
         description: "",
         propertyType: "residential",
-        price: 0,
+        listingType: "sale",
+        priceMin: 0,
+        priceMax: undefined,
         location: "",
         city: "",
         state: "",
+        pincode: "",
         bedrooms: undefined,
         bathrooms: undefined,
         area: 0,
         images: [],
+        videos: [],
         amenities: [],
+        facilities: [],
+        nearbyPlaces: [],
         status: "available",
         featured: false,
         brokerId: user?.id || "",
@@ -115,7 +127,7 @@ export default function BrokerDashboard() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.description || !formData.price || !formData.location || !formData.city || !formData.state || !formData.area) {
+    if (!formData.title || !formData.description || !formData.priceMin || !formData.location || !formData.city || !formData.state || !formData.area) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -255,6 +267,25 @@ export default function BrokerDashboard() {
                     </Select>
                   </div>
 
+                  <div className="space-y-2">
+                    <Label htmlFor="listingType">Listing Type *</Label>
+                    <Select
+                      value={formData.listingType}
+                      onValueChange={(value: "sale" | "rent" | "lease") =>
+                        setFormData({ ...formData, listingType: value })
+                      }
+                    >
+                      <SelectTrigger data-testid="select-listing-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sale">For Sale</SelectItem>
+                        <SelectItem value="rent">For Rent</SelectItem>
+                        <SelectItem value="lease">For Lease</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="description">Description *</Label>
                     <Textarea
@@ -269,17 +300,33 @@ export default function BrokerDashboard() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="price">Price (per month) *</Label>
+                    <Label htmlFor="priceMin">
+                      {formData.listingType === "rent" ? "Monthly Rent (₹) *" : "Minimum Price (₹) *"}
+                    </Label>
                     <Input
-                      id="price"
-                      data-testid="input-price"
+                      id="priceMin"
+                      data-testid="input-price-min"
                       type="number"
-                      placeholder="5000"
-                      value={formData.price || ""}
-                      onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
+                      placeholder={formData.listingType === "rent" ? "50000" : "5000000"}
+                      value={formData.priceMin || ""}
+                      onChange={(e) => setFormData({ ...formData, priceMin: parseInt(e.target.value) || 0 })}
                       required
                     />
                   </div>
+
+                  {formData.listingType !== "rent" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="priceMax">Maximum Price (₹)</Label>
+                      <Input
+                        id="priceMax"
+                        data-testid="input-price-max"
+                        type="number"
+                        placeholder="10000000"
+                        value={formData.priceMax || ""}
+                        onChange={(e) => setFormData({ ...formData, priceMax: parseInt(e.target.value) || undefined })}
+                      />
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="area">Area (sqft) *</Label>
@@ -323,10 +370,21 @@ export default function BrokerDashboard() {
                     <Input
                       id="state"
                       data-testid="input-state"
-                      placeholder="NY"
+                      placeholder="Maharashtra"
                       value={formData.state}
                       onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                       required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="pincode">Pincode</Label>
+                    <Input
+                      id="pincode"
+                      data-testid="input-pincode"
+                      placeholder="400001"
+                      value={formData.pincode}
+                      onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
                     />
                   </div>
 
@@ -363,6 +421,45 @@ export default function BrokerDashboard() {
                       onChange={(e) => {
                         const amenitiesArray = e.target.value.split(",").map(a => a.trim()).filter(Boolean);
                         setFormData({ ...formData, amenities: amenitiesArray });
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="facilities">Facilities (comma separated)</Label>
+                    <Input
+                      id="facilities"
+                      data-testid="input-facilities"
+                      placeholder="24/7 Security, Power Backup, Lift"
+                      onChange={(e) => {
+                        const facilitiesArray = e.target.value.split(",").map(f => f.trim()).filter(Boolean);
+                        setFormData({ ...formData, facilities: facilitiesArray });
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="nearbyPlaces">Nearby Places (comma separated)</Label>
+                    <Input
+                      id="nearbyPlaces"
+                      data-testid="input-nearby-places"
+                      placeholder="Metro Station 500m, School 1km, Hospital 2km"
+                      onChange={(e) => {
+                        const placesArray = e.target.value.split(",").map(p => p.trim()).filter(Boolean);
+                        setFormData({ ...formData, nearbyPlaces: placesArray });
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="videos">Video URLs (comma separated)</Label>
+                    <Input
+                      id="videos"
+                      data-testid="input-videos"
+                      placeholder="https://youtube.com/watch?v=..., https://..."
+                      onChange={(e) => {
+                        const videosArray = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
+                        setFormData({ ...formData, videos: videosArray });
                       }}
                     />
                   </div>
