@@ -118,20 +118,26 @@ export default function PropertyDetail() {
         </Link>
 
         {/* Image Gallery */}
-        <div className="mb-8 rounded-xl overflow-hidden">
+        <div className="mb-8 rounded-2xl overflow-hidden shadow-lg">
           {property.images && property.images.length > 0 ? (
-            <div className="aspect-[21/9] relative">
+            <div className="aspect-[21/9] relative group">
               <img
                 src={property.images[0]}
                 alt={property.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <Badge className="absolute top-6 right-6 text-lg px-4 py-2 capitalize">
-                {property.propertyType}
-              </Badge>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+                <Badge className="text-base px-5 py-2 capitalize bg-white/90 text-foreground backdrop-blur-sm">
+                  {property.propertyType}
+                </Badge>
+                <Badge className="text-base px-5 py-2 capitalize" data-testid="badge-listing-type">
+                  For {property.listingType}
+                </Badge>
+              </div>
             </div>
           ) : (
-            <div className="aspect-[21/9] bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+            <div className="aspect-[21/9] bg-gradient-to-br from-primary/10 via-primary/5 to-background flex items-center justify-center">
               <div className="text-center">
                 <MapPin className="h-24 w-24 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">No images available</p>
@@ -142,85 +148,123 @@ export default function PropertyDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            <div>
-              <h1 className="text-4xl font-bold mb-4">{property.title}</h1>
-              <div className="flex items-center text-muted-foreground mb-6">
-                <MapPin className="h-5 w-5 mr-2" />
-                <span className="text-lg">{property.location}, {property.city}, {property.state}</span>
-              </div>
-              <div className="mb-6">
-                <div className="text-4xl font-bold text-primary">
-                  {property.listingType === 'rent' ? (
-                    <>₹{property.priceMin.toLocaleString('en-IN')}<span className="text-xl font-normal text-muted-foreground">/month</span></>
-                  ) : property.priceMax ? (
-                    <>₹{property.priceMin.toLocaleString('en-IN')} - ₹{property.priceMax.toLocaleString('en-IN')}</>
-                  ) : (
-                    <>₹{property.priceMin.toLocaleString('en-IN')}</>
-                  )}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Title & Location Card */}
+            <Card className="border-none shadow-sm bg-gradient-to-br from-card via-card to-primary/5">
+              <CardContent className="p-6">
+                <h1 className="text-3xl md:text-4xl font-bold mb-3">{property.title}</h1>
+                <div className="flex items-center text-muted-foreground mb-4">
+                  <MapPin className="h-5 w-5 mr-2 flex-shrink-0" />
+                  <span className="text-base">{property.location}, {property.city}, {property.state}</span>
+                  {property.pincode && <span className="ml-2 text-sm">({property.pincode})</span>}
                 </div>
-                <Badge className="mt-2 capitalize" data-testid="badge-listing-type">
-                  For {property.listingType}
-                </Badge>
-              </div>
-            </div>
+                <div className="flex items-baseline gap-2">
+                  <div className="text-3xl font-bold text-primary">
+                    {property.listingType === 'rent' ? (
+                      <>₹{property.priceMin.toLocaleString('en-IN')}<span className="text-base font-normal text-muted-foreground ml-1">/month</span></>
+                    ) : property.priceMax ? (
+                      <>₹{property.priceMin.toLocaleString('en-IN')} - ₹{property.priceMax.toLocaleString('en-IN')}</>
+                    ) : (
+                      <>₹{property.priceMin.toLocaleString('en-IN')}</>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Property Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Property Details</CardTitle>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl">Property Highlights</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {property.bedrooms && (
-                    <div className="text-center p-4 bg-muted rounded-lg">
-                      <Bed className="h-8 w-8 mx-auto mb-2 text-primary" />
-                      <div className="text-2xl font-bold">{property.bedrooms}</div>
-                      <div className="text-sm text-muted-foreground">Bedrooms</div>
+                    <div className="text-center p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl hover-elevate transition-all">
+                      <Bed className="h-7 w-7 mx-auto mb-2 text-primary" />
+                      <div className="text-xl font-bold">{property.bedrooms}</div>
+                      <div className="text-xs text-muted-foreground mt-1">Bedrooms</div>
                     </div>
                   )}
                   {property.bathrooms && (
-                    <div className="text-center p-4 bg-muted rounded-lg">
-                      <Bath className="h-8 w-8 mx-auto mb-2 text-primary" />
-                      <div className="text-2xl font-bold">{property.bathrooms}</div>
-                      <div className="text-sm text-muted-foreground">Bathrooms</div>
+                    <div className="text-center p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl hover-elevate transition-all">
+                      <Bath className="h-7 w-7 mx-auto mb-2 text-primary" />
+                      <div className="text-xl font-bold">{property.bathrooms}</div>
+                      <div className="text-xs text-muted-foreground mt-1">Bathrooms</div>
                     </div>
                   )}
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <Square className="h-8 w-8 mx-auto mb-2 text-primary" />
-                    <div className="text-2xl font-bold">{property.area.toLocaleString()}</div>
-                    <div className="text-sm text-muted-foreground">Sq Ft</div>
+                  <div className="text-center p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl hover-elevate transition-all">
+                    <Square className="h-7 w-7 mx-auto mb-2 text-primary" />
+                    <div className="text-xl font-bold">{property.area.toLocaleString('en-IN')}</div>
+                    <div className="text-xs text-muted-foreground mt-1">Sq Ft</div>
                   </div>
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <Badge className="mb-2 capitalize" variant="outline">{property.status}</Badge>
-                    <div className="text-sm text-muted-foreground">Status</div>
+                  <div className="text-center p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl hover-elevate transition-all">
+                    <Badge className="mb-2 capitalize text-xs" variant="outline">{property.status}</Badge>
+                    <div className="text-xs text-muted-foreground mt-1">Status</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Description */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Description</CardTitle>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl">About This Property</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground whitespace-pre-wrap">{property.description}</p>
+                <p className="text-muted-foreground leading-relaxed">{property.description}</p>
               </CardContent>
             </Card>
 
             {/* Amenities */}
             {property.amenities && property.amenities.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Amenities</CardTitle>
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl">Amenities</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {property.amenities.map((amenity, index) => (
-                      <Badge key={index} variant="secondary">
+                      <Badge key={index} variant="secondary" className="px-3 py-1.5">
                         {amenity}
                       </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Facilities */}
+            {property.facilities && property.facilities.length > 0 && (
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl">Facilities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {property.facilities.map((facility, index) => (
+                      <Badge key={index} variant="outline" className="px-3 py-1.5">
+                        {facility}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Nearby Places */}
+            {property.nearbyPlaces && property.nearbyPlaces.length > 0 && (
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl">Nearby Places</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {property.nearbyPlaces.map((place, index) => (
+                      <div key={index} className="flex items-center gap-2 text-muted-foreground">
+                        <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                        <span className="text-sm">{place}</span>
+                      </div>
                     ))}
                   </div>
                 </CardContent>
@@ -230,9 +274,10 @@ export default function PropertyDetail() {
 
           {/* Inquiry Form */}
           <div className="lg:sticky lg:top-24 h-fit">
-            <Card>
-              <CardHeader>
-                <CardTitle>Request Information</CardTitle>
+            <Card className="shadow-lg border-primary/20">
+              <CardHeader className="bg-gradient-to-br from-primary/5 to-primary/10">
+                <CardTitle className="text-xl">Interested? Get in Touch</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">Fill out the form and we'll contact you shortly</p>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
