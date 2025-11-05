@@ -4,7 +4,7 @@
 A multi-portal property listing platform connecting brokers with buyers. Features include property listings, lead management, and interior design services.
 
 ## Project Status
-Development in progress - Building MVP features
+MVP complete with enhanced landing page and INR currency support
 
 ## Architecture
 - **Frontend**: React with TypeScript, Wouter for routing, TanStack Query for data fetching
@@ -43,8 +43,19 @@ Development in progress - Building MVP features
 - Resend (email)
 - Twilio (SMS)
 
+## Recent Updates (November 2025)
+- **Currency Localization**: All prices changed from USD to INR with proper Indian locale formatting (₹ symbol, comma separators)
+- **Landing Page Enhancement**: 
+  - Hero section with professional background image and gradient overlay
+  - Property category showcase cards with stock images (Residential, Commercial, Land)
+  - Features section highlighting platform benefits
+  - Enhanced call-to-action sections with improved design
+  - All interactive elements have proper accessibility attributes
+- **Stock Images**: Added professional real estate images stored in attached_assets/stock_images/
+
 ## Notes
 - Notifications (email/SMS) are optional - app works without credentials
 - Images are stored in Replit Object Storage
 - Lead notifications are sent asynchronously
 - Resend integration was dismissed - using API key approach instead
+- Landing page features creative design with images, not simple text-only layout
