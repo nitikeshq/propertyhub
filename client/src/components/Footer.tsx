@@ -34,9 +34,9 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Services</h4>
             <div className="space-y-2 text-muted-foreground">
-              <Link href="/">
+              <Link href="/properties">
                 <span className="block hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-browse">
-                  Browse Properties
+                  Find Properties
                 </span>
               </Link>
               <Link href="/interior-design">

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
+import FindProperties from "@/pages/FindProperties";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Login from "@/pages/Login";
@@ -18,11 +19,12 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/properties" component={FindProperties} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      <Route path="/property/:id" component={PropertyDetail} />
+      <Route path="/property/:slug" component={PropertyDetail} />
       <Route path="/interior-design" component={InteriorDesign} />
       <Route path="/dashboard" component={Dashboard} />
       <Route component={NotFound} />

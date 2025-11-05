@@ -9,6 +9,7 @@ export function Navigation() {
 
   const navLinks = [
     { href: "/", label: "Home" },
+    { href: "/properties", label: "Find Properties" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
   ];

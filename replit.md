@@ -14,11 +14,12 @@ MVP complete with enhanced landing page and INR currency support
 - **Notifications**: Email (Resend) and SMS (Twilio) for lead notifications
 
 ## Key Features
-1. **Public Property Search**: Browse residential, commercial properties, and land with advanced filters
-2. **Broker Portal**: Property listing management with image uploads
-3. **Admin Dashboard**: Lead management with status tracking
-4. **Interior Design**: Consultation request form
-5. **Notifications**: Email and SMS alerts for new leads
+1. **Find Properties**: Browse residential, commercial properties, and land with advanced search, filters, and sorting
+2. **Property Details**: Detailed property pages with SEO-friendly slugs and lead capture forms
+3. **Broker Portal**: Property listing management with image uploads
+4. **Admin Dashboard**: Lead management with status tracking
+5. **Interior Design**: Consultation request form
+6. **Notifications**: Email and SMS alerts for new leads
 
 ## Database Schema
 - **users**: Broker, owner, and admin accounts with email/password auth
@@ -44,6 +45,9 @@ MVP complete with enhanced landing page and INR currency support
 - Twilio (SMS)
 
 ## Recent Updates (November 2025)
+- **Find Properties Page**: New dedicated page at /properties with search, filter by type/price, and sort functionality
+- **Property Details with Slugs**: SEO-friendly URLs with format /property/title-slug-id
+- **Enterprise Login/Signup**: Modern split-screen design for authentication pages
 - **User Registration Enhancement**: Sign-up now offers "Property Broker" and "Property Owner" account types instead of allowing super admin registration
 - **Currency Localization**: All prices changed from USD to INR with proper Indian locale formatting (₹ symbol, comma separators)
 - **Landing Page Enhancement**: 

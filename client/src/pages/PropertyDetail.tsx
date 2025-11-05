@@ -13,8 +13,10 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { MapPin, Bed, Bath, Square, ArrowLeft, User, Mail, Phone, Send } from "lucide-react";
 
 export default function PropertyDetail() {
-  const [, params] = useRoute("/property/:id");
-  const propertyId = params?.id;
+  const [, params] = useRoute("/property/:slug");
+  // Extract ID from slug (format: "title-slug-id")
+  const slug = params?.slug;
+  const propertyId = slug?.split('-').pop();
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -107,10 +109,10 @@ export default function PropertyDetail() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-6 py-8">
-        <Link href="/">
+        <Link href="/properties">
           <Button variant="ghost" className="mb-6" data-testid="button-back">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Properties
+            Back to Find Properties
           </Button>
         </Link>
 
