@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { MapPin, Bed, Bath, Square, ArrowLeft, User, Mail, Phone, Send } from "lucide-react";
+import { MapPin, Bed, Bath, Square, ArrowLeft, User, Mail, Phone, Send, X, ChevronLeft, ChevronRight, Maximize2, Play } from "lucide-react";
 
 export default function PropertyDetail() {
   const [, params] = useRoute("/property/:slug");
@@ -27,6 +28,10 @@ export default function PropertyDetail() {
     message: "",
     budget: "",
   });
+
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const { data: property, isLoading } = useQuery<PropertyWithBroker>({
     queryKey: [`/api/properties/${propertyId}`],
@@ -70,6 +75,28 @@ export default function PropertyDetail() {
       requirements: formData.message,
       status: "new",
     });
+  };
+
+  const openLightbox = (index: number) => {
+    setCurrentImageIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setSelectedImageIndex(currentImageIndex);
+    setLightboxOpen(false);
+  };
+
+  const nextImage = () => {
+    if (property?.images && property.images.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (property?.images && property.images.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+    }
   };
 
   if (isLoading) {
@@ -118,33 +145,120 @@ export default function PropertyDetail() {
         </Link>
 
         {/* Image Gallery */}
-        <div className="mb-8 rounded-2xl overflow-hidden shadow-lg">
-          {property.images && property.images.length > 0 ? (
-            <div className="aspect-[21/9] relative group">
-              <img
-                src={property.images[0]}
-                alt={property.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
-                <Badge className="text-base px-5 py-2 capitalize bg-white/90 text-foreground backdrop-blur-sm">
-                  {property.propertyType}
-                </Badge>
-                <Badge className="text-base px-5 py-2 capitalize" data-testid="badge-listing-type">
-                  For {property.listingType}
-                </Badge>
+        {property.images && property.images.length > 0 ? (
+          <div className="mb-8 space-y-4">
+            {/* Main Image */}
+            <div className="rounded-2xl overflow-hidden shadow-lg relative group cursor-pointer">
+              <div className="aspect-[21/9] relative" onClick={() => openLightbox(selectedImageIndex)}>
+                <img
+                  src={property.images[selectedImageIndex]}
+                  alt={property.title}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+                  <Badge className="text-base px-5 py-2 capitalize bg-white/90 text-foreground backdrop-blur-sm">
+                    {property.propertyType}
+                  </Badge>
+                  <Badge className="text-base px-5 py-2 capitalize" data-testid="badge-listing-type">
+                    For {property.listingType}
+                  </Badge>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  size="icon"
+                  className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openLightbox(selectedImageIndex);
+                  }}
+                  data-testid="button-fullscreen"
+                >
+                  <Maximize2 className="h-5 w-5" />
+                </Button>
               </div>
             </div>
-          ) : (
+
+            {/* Thumbnail Gallery */}
+            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+              {property.images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImageIndex(index)}
+                  className={`aspect-square rounded-lg overflow-hidden hover-elevate active-elevate-2 transition-all ${
+                    selectedImageIndex === index ? 'ring-2 ring-primary' : ''
+                  }`}
+                  data-testid={`thumbnail-${index}`}
+                >
+                  <img
+                    src={image}
+                    alt={`${property.title} - Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="mb-8 rounded-2xl overflow-hidden shadow-lg">
             <div className="aspect-[21/9] bg-gradient-to-br from-primary/10 via-primary/5 to-background flex items-center justify-center">
               <div className="text-center">
                 <MapPin className="h-24 w-24 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">No images available</p>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Lightbox Modal */}
+        <Dialog open={lightboxOpen} onOpenChange={(open) => !open && closeLightbox()}>
+          <DialogContent className="max-w-7xl w-full h-[90vh] p-0 bg-black/95">
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
+                onClick={closeLightbox}
+                data-testid="button-close-lightbox"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+
+              {property.images && property.images.length > 1 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-50 text-white hover:bg-white/20 h-12 w-12"
+                    onClick={prevImage}
+                    data-testid="button-prev-image"
+                  >
+                    <ChevronLeft className="h-8 w-8" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-50 text-white hover:bg-white/20 h-12 w-12"
+                    onClick={nextImage}
+                    data-testid="button-next-image"
+                  >
+                    <ChevronRight className="h-8 w-8" />
+                  </Button>
+                </>
+              )}
+
+              <img
+                src={property.images?.[currentImageIndex]}
+                alt={property.title}
+                className="max-w-full max-h-full object-contain"
+              />
+
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white bg-black/50 px-4 py-2 rounded-lg">
+                {currentImageIndex + 1} / {property.images?.length}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
@@ -264,6 +378,34 @@ export default function PropertyDetail() {
                       <div key={index} className="flex items-center gap-2 text-muted-foreground">
                         <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
                         <span className="text-sm">{place}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Video Section */}
+            {property.videos && property.videos.length > 0 && (
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Play className="h-5 w-5 text-primary" />
+                    Property Videos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {property.videos.map((video, index) => (
+                      <div key={index} className="aspect-video rounded-lg overflow-hidden bg-muted">
+                        <video
+                          controls
+                          className="w-full h-full"
+                          data-testid={`video-${index}`}
+                        >
+                          <source src={video} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
                       </div>
                     ))}
                   </div>
