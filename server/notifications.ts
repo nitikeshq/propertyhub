@@ -26,11 +26,11 @@ export async function sendLeadNotifications(lead: Lead, propertyTitle?: string) 
         <p><strong>Name:</strong> ${lead.name}</p>
         <p><strong>Email:</strong> ${lead.email}</p>
         <p><strong>Phone:</strong> ${lead.phone}</p>
-        ${lead.budget ? `<p><strong>Budget:</strong> $${lead.budget.toLocaleString()}</p>` : ''}
+        ${lead.budget ? `<p><strong>Budget:</strong> ₹${lead.budget.toLocaleString('en-IN')}</p>` : ''}
         <p><strong>Message:</strong></p>
         <p>${lead.message}</p>
         ${lead.requirements ? `<p><strong>Requirements:</strong><br/>${lead.requirements}</p>` : ''}
-        <p><strong>Received:</strong> ${new Date(lead.createdAt).toLocaleString()}</p>
+        <p><strong>Received:</strong> ${new Date(lead.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
       `;
 
       await resend.emails.send({
@@ -50,8 +50,8 @@ export async function sendLeadNotifications(lead: Lead, propertyTitle?: string) 
   if (twilioClient && adminPhone && twilioPhone) {
     try {
       const smsMessage = lead.leadType === "property_inquiry"
-        ? `New Property Inquiry from ${lead.name} (${lead.phone}) for ${propertyTitle || 'a property'}. Budget: ${lead.budget ? '$' + lead.budget.toLocaleString() : 'Not specified'}`
-        : `New Interior Design Request from ${lead.name} (${lead.phone}). Budget: ${lead.budget ? '$' + lead.budget.toLocaleString() : 'Not specified'}`;
+        ? `New Property Inquiry from ${lead.name} (${lead.phone}) for ${propertyTitle || 'a property'}. Budget: ${lead.budget ? '₹' + lead.budget.toLocaleString('en-IN') : 'Not specified'}`
+        : `New Interior Design Request from ${lead.name} (${lead.phone}). Budget: ${lead.budget ? '₹' + lead.budget.toLocaleString('en-IN') : 'Not specified'}`;
 
       await twilioClient.messages.create({
         body: smsMessage,
