@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, bigint, boolean, pgEnum } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -32,8 +32,8 @@ export const properties = pgTable("properties", {
   propertyType: propertyTypeEnum("property_type").notNull(),
   listingType: listingTypeEnum("listing_type").notNull().default("sale"),
   status: propertyStatusEnum("status").notNull().default("available"),
-  priceMin: integer("price_min").notNull(),
-  priceMax: integer("price_max"), // null for rent (fixed price)
+  priceMin: bigint("price_min", { mode: "number" }).notNull(),
+  priceMax: bigint("price_max", { mode: "number" }), // null for rent (fixed price)
   location: text("location").notNull(),
   city: text("city").notNull(),
   state: text("state").notNull(),
@@ -62,7 +62,7 @@ export const leads = pgTable("leads", {
   email: text("email").notNull(),
   phone: text("phone").notNull(),
   message: text("message").notNull(),
-  budget: integer("budget"),
+  budget: bigint("budget", { mode: "number" }),
   requirements: text("requirements"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
