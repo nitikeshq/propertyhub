@@ -62,6 +62,9 @@ MVP complete with enhanced landing page and INR currency support
 - **Enterprise Login/Signup**: Modern split-screen design for authentication pages
 - **User Registration Enhancement**: Sign-up now offers "Property Broker" and "Property Owner" account types instead of allowing super admin registration
 - **Currency Localization**: All prices changed from USD to INR with proper Indian locale formatting (₹ symbol, comma separators)
+- **Email Notifications**: Configured with Resend API, uses INR format and Indian timezone for lead notifications
+- **Admin Account**: Created super admin account for viewing all leads and managing the platform
+- **Database Schema Update**: Changed price fields from integer to bigint to support large Indian real estate prices (up to ₹900 crore+)
 - **Landing Page Enhancement**: 
   - Hero section with professional background image and gradient overlay
   - Property category showcase cards with stock images (Residential, Commercial, Land)
@@ -73,11 +76,14 @@ MVP complete with enhanced landing page and INR currency support
 - **Stock Images**: Added professional real estate images stored in attached_assets/stock_images/
 
 ## Notes
-- Notifications (email/SMS) are optional - app works without credentials
+- Notifications (email/SMS) are configured - email via Resend, SMS via Twilio (optional)
+- Email/SMS notifications use INR currency format and Indian timezone
 - Images are stored in Replit Object Storage
-- Lead notifications are sent asynchronously
-- Resend integration was dismissed - using API key approach instead
+- Lead notifications are sent asynchronously to ADMIN_EMAIL and ADMIN_PHONE
 - Landing page features creative design with images, not simple text-only layout
 - Sessions persist across server restarts using PostgreSQL session store
-- Demo credentials: broker@demo.com / demo123
+- **Demo credentials:**
+  - **Admin:** admin@propertyhub.com / admin123 (access admin dashboard to view all leads)
+  - **Broker:** broker@demo.com / demo123 (access broker dashboard to manage properties)
 - DATABASE_URL must be set in deployed environments for session persistence
+- **Security Note:** Change admin password for production deployment

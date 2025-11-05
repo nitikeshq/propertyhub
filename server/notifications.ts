@@ -1,9 +1,18 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import twilio from "twilio";
 import { Lead } from "@shared/schema";
 
-// Initialize services only if API keys are available
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+// Initialize Gmail SMTP transporter
+const emailTransporter = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    })
+  : null;
+
 const twilioClient =
   process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
     ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
@@ -14,8 +23,8 @@ export async function sendLeadNotifications(lead: Lead, propertyTitle?: string) 
   const adminPhone = process.env.ADMIN_PHONE;
   const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
 
-  // Email notification
-  if (resend && adminEmail) {
+  // Email notification via Gmail SMTP
+  if (emailTransporter && adminEmail) {
     try {
       const subject = lead.leadType === "property_inquiry" 
         ? `New Property Inquiry: ${propertyTitle || 'Property'}`
@@ -33,14 +42,14 @@ export async function sendLeadNotifications(lead: Lead, propertyTitle?: string) 
         <p><strong>Received:</strong> ${new Date(lead.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
       `;
 
-      await resend.emails.send({
-        from: "PropertyHub <notifications@updates.replit.com>",
+      await emailTransporter.sendMail({
+        from: `"PropertyHub" <${process.env.GMAIL_USER}>`,
         to: adminEmail,
         subject,
         html: htmlContent,
       });
 
-      console.log(`Email notification sent to ${adminEmail}`);
+      console.log(`Email notification sent to ${adminEmail} via Gmail SMTP`);
     } catch (error) {
       console.error("Failed to send email notification:", error);
     }
