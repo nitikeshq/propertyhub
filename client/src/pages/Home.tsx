@@ -3,19 +3,18 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Property } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Building2, Home as HomeIcon, MapPin, Bed, Bath, Square, TrendingUp, Users, Shield, ArrowRight, ChevronLeft, ChevronRight, Phone, Mail } from "lucide-react";
+import { Building2, MapPin, Bed, Bath, Square, TrendingUp, Users, Shield, ArrowRight, ChevronLeft, ChevronRight, Phone, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import heroImage from "@assets/stock_images/modern_luxury_real_e_7f19321d.jpg";
-import residentialImage from "@assets/stock_images/modern_residential_h_93df657f.jpg";
-import commercialImage from "@assets/stock_images/commercial_office_bu_e3030318.jpg";
-import landImage from "@assets/stock_images/vacant_land_property_82ce77fb.jpg";
 
 export default function Home() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -102,7 +101,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
+      <Navigation />
+      
       {/* Hero Section */}
       <div className="relative min-h-[600px] flex items-center overflow-hidden">
         {/* Background Image */}
@@ -358,38 +359,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-card border-t">
-        <div className="container mx-auto px-6 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-xl font-bold mb-4">PropertyHub</h3>
-              <p className="text-muted-foreground">Premium real estate platform connecting brokers and buyers worldwide.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">For Brokers</h4>
-              <div className="space-y-2 text-muted-foreground">
-                <Link href="/login" className="block hover:text-foreground">Login</Link>
-                <Link href="/register" className="block hover:text-foreground">Register</Link>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Services</h4>
-              <div className="space-y-2 text-muted-foreground">
-                <Link href="/" className="block hover:text-foreground">Browse Properties</Link>
-                <Link href="/interior-design" className="block hover:text-foreground">Interior Design</Link>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
-              <p className="text-muted-foreground">Get in touch with our team for any inquiries.</p>
-            </div>
-          </div>
-          <div className="border-t mt-8 pt-8 text-center text-muted-foreground">
-            <p>&copy; 2024 PropertyHub. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Lead Request Form Dialog */}
       <Dialog open={showLeadForm} onOpenChange={(open) => !open && handleCloseDialog()}>
