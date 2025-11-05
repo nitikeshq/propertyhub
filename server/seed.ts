@@ -5,6 +5,24 @@ import bcrypt from "bcryptjs";
 async function seed() {
   console.log("Starting seed...");
 
+  // Create admin account
+  const adminHashedPassword = await bcrypt.hash("admin123", 10);
+  
+  await db
+    .insert(users)
+    .values({
+      name: "Super Admin",
+      email: "admin@propertyhub.com",
+      password: adminHashedPassword,
+      role: "admin",
+      phone: "+91 9999999999",
+    })
+    .onConflictDoNothing();
+
+  console.log("✅ Created admin account:");
+  console.log("   Email: admin@propertyhub.com");
+  console.log("   Password: admin123");
+
   // Create demo broker account
   const hashedPassword = await bcrypt.hash("demo123", 10);
   
