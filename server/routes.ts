@@ -2,6 +2,8 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import memorystore from "memorystore";
+import multer from "multer";
+import path from "path";
 import { db } from "./db";
 import { users, properties, leads, insertPropertySchema, insertLeadSchema, updateLeadSchema, updatePropertySchema } from "@shared/schema";
 import { createUser, getUserByEmail, verifyPassword, getUserById } from "./auth";
@@ -10,6 +12,33 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { sendLeadNotifications } from "./notifications";
 
 const MemoryStore = memorystore(session);
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
+    }
+  }
+});
 
 declare module "express-session" {
   interface SessionData {
@@ -46,6 +75,12 @@ async function requireAdmin(req: AuthRequest, res: Response, next: NextFunction)
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve static files from uploads directory
+  app.use('/uploads', (req, res, next) => {
+    const express = require('express');
+    express.static('uploads')(req, res, next);
+  });
+
   // Session middleware
   app.use(
     session({
@@ -130,6 +165,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ message: "Logged out successfully" });
     });
+  });
+
+  // File upload endpoint
+  app.post("/api/upload", requireAuth, upload.array('images', 10), (req, res) => {
+    try {
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+
+      const fileUrls = req.files.map((file) => `/uploads/${file.filename}`);
+      res.json({ urls: fileUrls });
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({ message: "Upload failed" });
+    }
   });
 
   app.get("/api/auth/me", async (req, res) => {
