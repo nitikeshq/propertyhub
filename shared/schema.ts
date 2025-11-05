@@ -7,6 +7,7 @@ import { z } from "zod";
 // Enums
 export const userRoleEnum = pgEnum("user_role", ["broker", "owner", "admin"]);
 export const propertyTypeEnum = pgEnum("property_type", ["residential", "commercial", "land"]);
+export const listingTypeEnum = pgEnum("listing_type", ["sale", "rent", "lease"]);
 export const propertyStatusEnum = pgEnum("property_status", ["available", "rented", "sold"]);
 export const leadStatusEnum = pgEnum("lead_status", ["new", "contacted", "in_progress", "qualified", "closed_won", "closed_lost"]);
 export const leadTypeEnum = pgEnum("lead_type", ["property_inquiry", "interior_design"]);
@@ -29,8 +30,10 @@ export const properties = pgTable("properties", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   propertyType: propertyTypeEnum("property_type").notNull(),
+  listingType: listingTypeEnum("listing_type").notNull().default("sale"),
   status: propertyStatusEnum("status").notNull().default("available"),
-  price: integer("price").notNull(),
+  priceMin: integer("price_min").notNull(),
+  priceMax: integer("price_max"), // null for rent (fixed price)
   location: text("location").notNull(),
   city: text("city").notNull(),
   state: text("state").notNull(),

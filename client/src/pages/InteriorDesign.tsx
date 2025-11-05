@@ -201,7 +201,7 @@ export default function InteriorDesign() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="budget">Budget Range (USD)</Label>
+                    <Label htmlFor="budget">Budget Range (INR)</Label>
                     <Input
                       id="budget"
                       data-testid="input-budget"
