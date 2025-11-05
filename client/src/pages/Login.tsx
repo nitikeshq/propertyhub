@@ -3,10 +3,9 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Building2 } from "lucide-react";
+import { Building2, CheckCircle2, TrendingUp, Users, Shield } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Login() {
@@ -40,21 +39,91 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background flex items-center justify-center p-6">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 bg-primary rounded-lg flex items-center justify-center">
-              <Building2 className="h-10 w-10 text-primary-foreground" />
+    <div className="min-h-screen grid lg:grid-cols-2">
+      {/* Left Side - Branding */}
+      <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-12 text-primary-foreground">
+        <div>
+          <Link href="/">
+            <div className="flex items-center gap-3 cursor-pointer" data-testid="link-home-logo">
+              <div className="h-12 w-12 bg-primary-foreground/10 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                <Building2 className="h-7 w-7" />
+              </div>
+              <span className="text-2xl font-bold">PropertyHub</span>
+            </div>
+          </Link>
+        </div>
+
+        <div className="space-y-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-4">
+              Welcome back to India's trusted property platform
+            </h1>
+            <p className="text-lg text-primary-foreground/80">
+              Sign in to manage your properties, connect with buyers, and grow your real estate business.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="h-6 w-6 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold mb-1">Unlimited Property Listings</h3>
+                <p className="text-sm text-primary-foreground/70">List residential, commercial properties and land with ease</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <TrendingUp className="h-6 w-6 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold mb-1">Lead Generation</h3>
+                <p className="text-sm text-primary-foreground/70">Capture and manage qualified leads automatically</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Shield className="h-6 w-6 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold mb-1">Secure Platform</h3>
+                <p className="text-sm text-primary-foreground/70">Your data is protected with enterprise-grade security</p>
+              </div>
             </div>
           </div>
-          <CardTitle className="text-3xl">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your PropertyHub account</CardDescription>
-        </CardHeader>
-        <CardContent>
+        </div>
+
+        <div className="flex items-center gap-8 text-sm text-primary-foreground/60">
+          <span>© 2024 PropertyHub</span>
+          <Link href="/about">
+            <span className="hover:text-primary-foreground cursor-pointer transition-colors">About</span>
+          </Link>
+          <Link href="/contact">
+            <span className="hover:text-primary-foreground cursor-pointer transition-colors">Contact</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Right Side - Login Form */}
+      <div className="flex items-center justify-center p-8 bg-background">
+        <div className="w-full max-w-md space-y-8">
+          {/* Mobile Logo */}
+          <div className="lg:hidden">
+            <Link href="/">
+              <div className="flex items-center gap-3 mb-8 cursor-pointer" data-testid="link-home-logo-mobile">
+                <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center">
+                  <Building2 className="h-7 w-7 text-primary-foreground" />
+                </div>
+                <span className="text-2xl font-bold">PropertyHub</span>
+              </div>
+            </Link>
+          </div>
+
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Sign in to your account</h2>
+            <p className="text-muted-foreground mt-2">
+              Enter your credentials to access your dashboard
+            </p>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email address</Label>
               <Input
                 id="email"
                 data-testid="input-email"
@@ -63,11 +132,14 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-11"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+              </div>
               <Input
                 id="password"
                 data-testid="input-password"
@@ -76,37 +148,48 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="h-11"
               />
             </div>
 
             <Button
               data-testid="button-login"
               type="submit"
-              className="w-full"
+              className="w-full h-11"
               disabled={loading}
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Don't have an account? </span>
+          <div className="space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  New to PropertyHub?
+                </span>
+              </div>
+            </div>
+
             <Link href="/register">
-              <a data-testid="link-register" className="text-primary hover:underline font-medium">
-                Register here
-              </a>
+              <Button variant="outline" className="w-full h-11" data-testid="button-create-account">
+                Create an account
+              </Button>
             </Link>
           </div>
 
-          <div className="mt-4 text-center">
+          <div className="text-center">
             <Link href="/">
-              <a data-testid="link-home" className="text-sm text-muted-foreground hover:text-foreground">
-                ← Back to Home
-              </a>
+              <span className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors" data-testid="link-home">
+                ← Back to home
+              </span>
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
