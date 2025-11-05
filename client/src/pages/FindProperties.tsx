@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Property } from "@shared/schema";
@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { MapPin, Bed, Bath, Square, Search } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Search, Loader2 } from "lucide-react";
+
+const ITEMS_PER_PAGE = 9;
 
 export default function FindProperties() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,6 +19,8 @@ export default function FindProperties() {
   const [sortBy, setSortBy] = useState<string>("newest");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties"],
@@ -73,7 +77,36 @@ export default function FindProperties() {
     return filtered;
   };
 
-  const results = filteredAndSortedProperties();
+  const allResults = filteredAndSortedProperties();
+  const results = allResults.slice(0, displayCount);
+  const hasMore = displayCount < allResults.length;
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore]);
+
+  // Reset display count when filters change
+  useEffect(() => {
+    setDisplayCount(ITEMS_PER_PAGE);
+  }, [searchQuery, propertyType, sortBy, minPrice, maxPrice]);
+
+  const handleLoadMore = () => {
+    setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -214,9 +247,9 @@ export default function FindProperties() {
         ) : (
           <>
             <div className="mb-4 text-sm text-muted-foreground">
-              Showing {results.length} {results.length === 1 ? 'property' : 'properties'}
+              Showing {results.length} of {allResults.length} {allResults.length === 1 ? 'property' : 'properties'}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {results.map((property) => (
                 <Link key={property.id} href={`/property/${createSlug(property)}`}>
                   <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-property-${property.id}`}>
@@ -270,6 +303,29 @@ export default function FindProperties() {
                 </Link>
               ))}
             </div>
+
+            {/* Load More Section */}
+            {hasMore && (
+              <div className="flex flex-col items-center gap-4 py-8">
+                <Button
+                  size="lg"
+                  onClick={handleLoadMore}
+                  data-testid="button-load-more"
+                  className="min-w-[200px]"
+                >
+                  Load More Properties
+                </Button>
+                <div ref={loadMoreRef} className="h-4 flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              </div>
+            )}
+
+            {!hasMore && allResults.length > ITEMS_PER_PAGE && (
+              <div className="text-center py-8 text-muted-foreground">
+                You've reached the end of the list
+              </div>
+            )}
           </>
         )}
       </div>

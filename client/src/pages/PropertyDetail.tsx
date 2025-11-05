@@ -15,8 +15,9 @@ import { MapPin, Bed, Bath, Square, ArrowLeft, User, Mail, Phone, Send } from "l
 export default function PropertyDetail() {
   const [, params] = useRoute("/property/:slug");
   // Extract ID from slug (format: "title-slug-id")
-  const slug = params?.slug;
-  const propertyId = slug?.split('-').pop();
+  // UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars with dashes)
+  const slug = params?.slug || "";
+  const propertyId = slug.length >= 36 ? slug.slice(-36) : slug;
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
