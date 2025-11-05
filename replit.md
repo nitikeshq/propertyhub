@@ -17,7 +17,9 @@ MVP complete with enhanced landing page and INR currency support
 1. **Find Properties**: Browse residential, commercial properties, and land with advanced search, filters, and sorting
 2. **Property Details**: Detailed property pages with SEO-friendly slugs and lead capture forms
 3. **Broker Portal**: Property listing management with image uploads
-4. **Admin Dashboard**: Lead management with status tracking
+4. **Admin Dashboard**: Tabbed interface with lead management and properties overview
+   - Leads tab: Status tracking and management
+   - Properties tab: View all properties with broker information (view-only)
 5. **Interior Design**: Consultation request form
 6. **Notifications**: Email and SMS alerts for new leads
 

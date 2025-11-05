@@ -223,6 +223,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/properties/with-brokers", async (req, res) => {
+    try {
+      const propertiesWithBrokers = await db
+        .select({
+          property: properties,
+          broker: users,
+        })
+        .from(properties)
+        .leftJoin(users, eq(properties.brokerId, users.id))
+        .orderBy(desc(properties.createdAt));
+
+      const formattedProperties = propertiesWithBrokers.map(({ property, broker }) => {
+        if (broker) {
+          const { password: _, ...brokerWithoutPassword } = broker;
+          return { ...property, broker: brokerWithoutPassword };
+        }
+        return property;
+      });
+
+      res.json(formattedProperties);
+    } catch (error) {
+      console.error("Failed to fetch properties with brokers:", error);
+      res.status(500).json({ message: "Failed to fetch properties" });
+    }
+  });
+
   app.get("/api/properties/:id", async (req, res) => {
     try {
       const propertyId = req.params.id;

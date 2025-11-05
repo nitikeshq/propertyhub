@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
-import { LeadWithProperty, UpdateLead } from "@shared/schema";
+import { LeadWithProperty, UpdateLead, Property, User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,22 +10,32 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Users, Mail, Home as HomeIcon, LogOut, Search, Eye, Building2 } from "lucide-react";
+import { Users, Mail, Home as HomeIcon, LogOut, Search, Eye, Building2, ListChecks } from "lucide-react";
 import { format } from "date-fns";
+
+type PropertyWithBroker = Property & { broker: User };
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState("leads");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [selectedLead, setSelectedLead] = useState<LeadWithProperty | null>(null);
+  const [propertySearchQuery, setPropertySearchQuery] = useState("");
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState("all");
 
   const { data: leads, isLoading } = useQuery<LeadWithProperty[]>({
     queryKey: ["/api/leads"],
+  });
+
+  const { data: properties, isLoading: isLoadingProperties } = useQuery<PropertyWithBroker[]>({
+    queryKey: ["/api/properties/with-brokers"],
   });
 
   const updateLeadMutation = useMutation({
@@ -95,6 +105,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const filteredProperties = (properties || []).filter((property) => {
+    const matchesSearch =
+      !propertySearchQuery ||
+      property.title.toLowerCase().includes(propertySearchQuery.toLowerCase()) ||
+      property.city.toLowerCase().includes(propertySearchQuery.toLowerCase()) ||
+      property.location.toLowerCase().includes(propertySearchQuery.toLowerCase());
+
+    const matchesType = propertyTypeFilter === "all" || property.propertyType === propertyTypeFilter;
+
+    return matchesSearch && matchesType;
+  });
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -127,8 +149,21 @@ export default function AdminDashboard() {
       </header>
 
       <div className="container mx-auto px-6 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="leads" data-testid="tab-leads">
+              <ListChecks className="h-4 w-4 mr-2" />
+              Leads
+            </TabsTrigger>
+            <TabsTrigger value="properties" data-testid="tab-properties">
+              <Building2 className="h-4 w-4 mr-2" />
+              Properties
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="leads" className="space-y-6">
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">New</CardTitle>
@@ -318,6 +353,127 @@ export default function AdminDashboard() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="properties" className="space-y-6">
+            {/* Properties Search */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      data-testid="input-search-properties"
+                      placeholder="Search by title, city, or location..."
+                      className="pl-10"
+                      value={propertySearchQuery}
+                      onChange={(e) => setPropertySearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Select value={propertyTypeFilter} onValueChange={setPropertyTypeFilter}>
+                    <SelectTrigger data-testid="select-property-type-filter" className="w-full md:w-48">
+                      <SelectValue placeholder="Property Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="residential">Residential</SelectItem>
+                      <SelectItem value="commercial">Commercial</SelectItem>
+                      <SelectItem value="land">Land</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Properties Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>All Properties ({filteredProperties.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingProperties ? (
+                  <div className="py-12 text-center">
+                    <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading properties...</p>
+                  </div>
+                ) : filteredProperties.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">No properties found</h3>
+                    <p className="text-muted-foreground">No properties match your current filters</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Property</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Listing</TableHead>
+                          <TableHead>Price Range</TableHead>
+                          <TableHead>Location</TableHead>
+                          <TableHead>Broker</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredProperties.map((property) => (
+                          <TableRow key={property.id} data-testid={`row-property-${property.id}`}>
+                            <TableCell className="font-medium">{property.title}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="capitalize">
+                                {property.propertyType}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className="capitalize">
+                                {property.listingType}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {property.priceMax ? (
+                                `₹${property.priceMin.toLocaleString('en-IN')} - ₹${property.priceMax.toLocaleString('en-IN')}`
+                              ) : (
+                                `₹${property.priceMin.toLocaleString('en-IN')}`
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                <div>{property.city}</div>
+                                <div className="text-muted-foreground">{property.state}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {property.broker ? (
+                                <div className="text-sm">
+                                  <div className="font-medium">{property.broker.name}</div>
+                                  <div className="text-muted-foreground">{property.broker.email}</div>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {format(new Date(property.createdAt), "MMM dd, yyyy")}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Link href={`/property/${property.id}`}>
+                                <Button variant="ghost" size="sm" data-testid={`button-view-property-${property.id}`}>
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Lead Detail Dialog */}
