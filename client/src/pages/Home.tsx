@@ -1,63 +1,110 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Property } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Search, Building2, Home as HomeIcon, MapPin, Bed, Bath, Square, Filter, TrendingUp, Users, Shield, ArrowRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Building2, Home as HomeIcon, MapPin, Bed, Bath, Square, TrendingUp, Users, Shield, ArrowRight, ChevronLeft, ChevronRight, Phone, Mail } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import heroImage from "@assets/stock_images/modern_luxury_real_e_7f19321d.jpg";
 import residentialImage from "@assets/stock_images/modern_residential_h_93df657f.jpg";
 import commercialImage from "@assets/stock_images/commercial_office_bu_e3030318.jpg";
 import landImage from "@assets/stock_images/vacant_land_property_82ce77fb.jpg";
 
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [propertyType, setPropertyType] = useState<string>("all");
-  const [priceRange, setPriceRange] = useState([0, 100000000]);
-  const [sortBy, setSortBy] = useState("newest");
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [showLeadForm, setShowLeadForm] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const { toast } = useToast();
+
+  // Lead form state
+  const [leadForm, setLeadForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: ""
+  });
 
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties"],
-    queryFn: async () => {
-      const response = await fetch("/api/properties", {
-        credentials: "include",
+  });
+
+  // Get featured properties (limit to 8 for slider)
+  const featuredProperties = properties?.slice(0, 8) || [];
+  
+  const itemsPerSlide = 3;
+  const maxSlides = Math.max(1, Math.ceil(featuredProperties.length / itemsPerSlide));
+
+  // Lead submission mutation
+  const createLeadMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest("/api/leads", "POST", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Request submitted!",
+        description: "Our team will contact you shortly with property details.",
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch properties");
-      }
-      return response.json();
+      handleCloseDialog();
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to submit request. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
-  const filteredProperties = properties?.filter((property) => {
-    const matchesSearch = !searchQuery || 
-      property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.city.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesType = propertyType === "all" || property.propertyType === propertyType;
-    const matchesPrice = property.price >= priceRange[0] && property.price <= priceRange[1];
-    
-    return matchesSearch && matchesType && matchesPrice;
-  }) || [];
+  const handleRequestDetails = (property: Property) => {
+    setSelectedProperty(property);
+    setLeadForm({
+      name: "",
+      email: "",
+      phone: "",
+      message: `I'm interested in ${property.title} at ${property.location}, ${property.city}.`
+    });
+    setShowLeadForm(true);
+  };
 
-  const sortedProperties = [...filteredProperties].sort((a, b) => {
-    switch (sortBy) {
-      case "price-low": return a.price - b.price;
-      case "price-high": return b.price - a.price;
-      case "newest": return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      default: return 0;
+  const handleCloseDialog = () => {
+    setShowLeadForm(false);
+    setSelectedProperty(null);
+    setLeadForm({ name: "", email: "", phone: "", message: "" });
+  };
+
+  const handleSubmitLead = (e: React.FormEvent) => {
+    e.preventDefault();
+    createLeadMutation.mutate({
+      ...leadForm,
+      propertyId: selectedProperty?.id,
+      leadType: "property"
+    });
+  };
+
+  const nextSlide = () => {
+    if (maxSlides > 1) {
+      setCurrentSlide((prev) => (prev + 1) % maxSlides);
     }
-  });
+  };
+
+  const prevSlide = () => {
+    if (maxSlides > 1) {
+      setCurrentSlide((prev) => (prev - 1 + maxSlides) % maxSlides);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="relative min-h-[700px] flex items-center overflow-hidden">
+      <div className="relative min-h-[600px] flex items-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0">
           <img
@@ -70,130 +117,183 @@ export default function Home() {
         </div>
         
         <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl">
+          <div className="max-w-4xl text-center mx-auto">
             <Badge className="mb-6 text-sm px-4 py-2 bg-primary/20 backdrop-blur-sm border-primary/30 text-white">
               India's Premier Property Platform
             </Badge>
             <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white leading-tight">
               Find Your Dream Property in India
             </h1>
-            <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-2xl">
+            <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto">
               Discover premium residential, commercial spaces, and land opportunities across major cities
             </p>
-            
-            {/* Search Bar */}
-            <Card className="shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      data-testid="input-search"
-                      placeholder="Search by location, city, or property name..."
-                      className="pl-10 h-14"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <Select value={propertyType} onValueChange={setPropertyType}>
-                    <SelectTrigger data-testid="select-property-type" className="w-full md:w-48 h-14">
-                      <SelectValue placeholder="Property Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="residential">Residential</SelectItem>
-                      <SelectItem value="commercial">Commercial</SelectItem>
-                      <SelectItem value="land">Land</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button data-testid="button-search" size="lg" className="h-14 px-8">
-                    Search Properties
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="#properties">
+                <Button size="lg" className="px-8 py-6 text-lg" data-testid="button-view-properties">
+                  View Properties
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="/interior-design">
+                <Button size="lg" variant="outline" className="px-8 py-6 text-lg bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20" data-testid="button-interior-cta">
+                  Interior Design Services
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Property Categories */}
-      <div className="bg-muted/30 py-20">
+      {/* Featured Properties Slider */}
+      <div id="properties" className="py-20 bg-muted/30">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Browse by Property Type</h2>
-            <p className="text-xl text-muted-foreground">Find the perfect space for your needs</p>
+            <h2 className="text-4xl font-bold mb-4">Featured Properties</h2>
+            <p className="text-xl text-muted-foreground">Discover our handpicked selection of premium properties</p>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <button
-              onClick={() => setPropertyType("residential")}
-              data-testid="button-category-residential"
-              className="text-left w-full"
-            >
-              <Card className="overflow-hidden hover-elevate active-elevate-2 cursor-pointer group">
-                <div className="aspect-[4/3] relative overflow-hidden">
-                  <img
-                    src={residentialImage}
-                    alt="Residential Properties"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-6">
-                    <div className="text-white">
-                      <HomeIcon className="h-8 w-8 mb-2" />
-                      <h3 className="text-2xl font-bold">Residential</h3>
-                      <p className="text-white/90 mt-1">Apartments, Villas & Homes</p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </button>
 
-            <button
-              onClick={() => setPropertyType("commercial")}
-              data-testid="button-category-commercial"
-              className="text-left w-full"
-            >
-              <Card className="overflow-hidden hover-elevate active-elevate-2 cursor-pointer group">
-                <div className="aspect-[4/3] relative overflow-hidden">
-                  <img
-                    src={commercialImage}
-                    alt="Commercial Properties"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-6">
-                    <div className="text-white">
-                      <Building2 className="h-8 w-8 mb-2" />
-                      <h3 className="text-2xl font-bold">Commercial</h3>
-                      <p className="text-white/90 mt-1">Offices, Retail & Warehouses</p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </button>
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="overflow-hidden">
+                  <div className="aspect-[16/9] bg-muted animate-pulse" />
+                  <CardContent className="p-6 space-y-3">
+                    <div className="h-6 bg-muted animate-pulse rounded" />
+                    <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : featuredProperties.length === 0 ? (
+            <div className="text-center py-12">
+              <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold mb-2">No properties available</h3>
+              <p className="text-muted-foreground">Check back soon for new listings</p>
+            </div>
+          ) : (
+            <div className="relative">
+              {/* Navigation Buttons */}
+              {maxSlides > 1 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 h-12 w-12 rounded-full bg-background shadow-lg"
+                    onClick={prevSlide}
+                    data-testid="button-prev-slide"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 h-12 w-12 rounded-full bg-background shadow-lg"
+                    onClick={nextSlide}
+                    data-testid="button-next-slide"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </Button>
+                </>
+              )}
 
-            <button
-              onClick={() => setPropertyType("land")}
-              data-testid="button-category-land"
-              className="text-left w-full"
-            >
-              <Card className="overflow-hidden hover-elevate active-elevate-2 cursor-pointer group">
-                <div className="aspect-[4/3] relative overflow-hidden">
-                  <img
-                    src={landImage}
-                    alt="Land Properties"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-6">
-                    <div className="text-white">
-                      <MapPin className="h-8 w-8 mb-2" />
-                      <h3 className="text-2xl font-bold">Land</h3>
-                      <p className="text-white/90 mt-1">Plots & Development Sites</p>
+              {/* Property Cards Slider */}
+              <div className="overflow-hidden">
+                <div
+                  className="flex transition-transform duration-300 ease-in-out"
+                  style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                >
+                  {Array.from({ length: maxSlides }).map((_, slideIndex) => (
+                    <div key={slideIndex} className="w-full flex-shrink-0">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-1">
+                        {featuredProperties
+                          .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
+                          .map((property) => (
+                            <Card
+                              key={property.id}
+                              data-testid={`card-property-${property.id}`}
+                              className="overflow-hidden hover-elevate active-elevate-2"
+                            >
+                              <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+                                {property.images && property.images.length > 0 ? (
+                                  <img
+                                    src={property.images[0]}
+                                    alt={property.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                                    <Building2 className="h-16 w-16 text-muted-foreground" />
+                                  </div>
+                                )}
+                                <Badge className="absolute top-3 right-3 capitalize">
+                                  {property.propertyType}
+                                </Badge>
+                              </div>
+
+                              <CardContent className="p-6">
+                                <h3 className="text-xl font-semibold mb-2 line-clamp-2">{property.title}</h3>
+                                <div className="flex items-center text-muted-foreground mb-4">
+                                  <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                                  <span className="text-sm line-clamp-1">{property.location}, {property.city}</span>
+                                </div>
+
+                                <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
+                                  {property.bedrooms && (
+                                    <div className="flex items-center gap-1">
+                                      <Bed className="h-4 w-4" />
+                                      <span>{property.bedrooms}</span>
+                                    </div>
+                                  )}
+                                  {property.bathrooms && (
+                                    <div className="flex items-center gap-1">
+                                      <Bath className="h-4 w-4" />
+                                      <span>{property.bathrooms}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-1">
+                                    <Square className="h-4 w-4" />
+                                    <span>{property.area.toLocaleString()}</span>
+                                  </div>
+                                </div>
+
+                                <div className="text-2xl font-bold text-primary mb-4">
+                                  ₹{property.price.toLocaleString('en-IN')}
+                                  <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                                </div>
+
+                                <Button
+                                  className="w-full"
+                                  onClick={() => handleRequestDetails(property)}
+                                  data-testid={`button-request-details-${property.id}`}
+                                >
+                                  Request Details
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          ))}
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              </Card>
-            </button>
-          </div>
+              </div>
+
+              {/* Dots Indicator */}
+              {maxSlides > 1 && (
+                <div className="flex justify-center gap-2 mt-8">
+                  {Array.from({ length: maxSlides }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentSlide(index)}
+                      className={`h-2 rounded-full transition-all ${
+                        index === currentSlide ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30"
+                      }`}
+                      data-testid={`dot-${index}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -237,126 +337,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Filter & Sort Section */}
-      <div className="border-y bg-card">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-            <div className="flex-1 w-full md:w-auto">
-              <label className="text-sm font-medium mb-3 block">Price Range: ₹{priceRange[0].toLocaleString('en-IN')} - ₹{priceRange[1].toLocaleString('en-IN')}</label>
-              <Slider
-                data-testid="slider-price-range"
-                value={priceRange}
-                onValueChange={setPriceRange}
-                max={100000000}
-                step={1000000}
-                className="w-full md:w-80"
-              />
-            </div>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger data-testid="select-sort" className="w-full md:w-48">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* Properties Grid */}
-      <div className="container mx-auto px-6 py-16">
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="overflow-hidden">
-                <div className="aspect-[16/9] bg-muted animate-pulse" />
-                <CardContent className="p-6 space-y-3">
-                  <div className="h-6 bg-muted animate-pulse rounded" />
-                  <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
-                  <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : sortedProperties.length === 0 ? (
-          <div className="text-center py-24">
-            <Building2 className="h-24 w-24 mx-auto text-muted-foreground mb-6" />
-            <h3 className="text-2xl font-semibold mb-3">No properties found</h3>
-            <p className="text-muted-foreground mb-8">Try adjusting your search filters</p>
-            <Button onClick={() => { setSearchQuery(""); setPropertyType("all"); setPriceRange([0, 100000000]); }}>
-              Clear Filters
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold mb-2">Available Properties</h2>
-              <p className="text-muted-foreground">{sortedProperties.length} properties found</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {sortedProperties.map((property) => (
-                <Link key={property.id} href={`/property/${property.id}`}>
-                  <Card data-testid={`card-property-${property.id}`} className="overflow-hidden hover-elevate active-elevate-2 cursor-pointer transition-all">
-                    <div className="aspect-[16/9] bg-muted relative overflow-hidden">
-                      {property.images && property.images.length > 0 ? (
-                        <img
-                          src={property.images[0]}
-                          alt={property.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-                          <Building2 className="h-16 w-16 text-muted-foreground" />
-                        </div>
-                      )}
-                      <Badge className="absolute top-3 right-3 capitalize">
-                        {property.propertyType}
-                      </Badge>
-                    </div>
-                    
-                    <CardContent className="p-6">
-                      <h3 className="text-xl font-semibold mb-2 line-clamp-1">{property.title}</h3>
-                      <div className="flex items-center text-muted-foreground mb-4">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        <span className="text-sm line-clamp-1">{property.location}, {property.city}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
-                        {property.bedrooms && (
-                          <div className="flex items-center gap-1">
-                            <Bed className="h-4 w-4" />
-                            <span>{property.bedrooms}</span>
-                          </div>
-                        )}
-                        {property.bathrooms && (
-                          <div className="flex items-center gap-1">
-                            <Bath className="h-4 w-4" />
-                            <span>{property.bathrooms}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <Square className="h-4 w-4" />
-                          <span>{property.area.toLocaleString()} sqft</span>
-                        </div>
-                      </div>
-                      
-                      <div className="text-2xl font-bold text-primary">
-                        ₹{property.price.toLocaleString('en-IN')}
-                        <span className="text-sm font-normal text-muted-foreground">/mo</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </>
-        )}
       </div>
 
       {/* Interior Design CTA */}
@@ -410,6 +390,93 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Lead Request Form Dialog */}
+      <Dialog open={showLeadForm} onOpenChange={(open) => !open && handleCloseDialog()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Request Property Details</DialogTitle>
+            <DialogDescription>
+              {selectedProperty && (
+                <span>Fill in your details and we'll contact you about <strong>{selectedProperty.title}</strong></span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmitLead} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                data-testid="input-lead-name"
+                required
+                value={leadForm.name}
+                onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
+                placeholder="Your full name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email *</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  data-testid="input-lead-email"
+                  type="email"
+                  required
+                  value={leadForm.email}
+                  onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+                  placeholder="your@email.com"
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="phone">Phone *</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="phone"
+                  data-testid="input-lead-phone"
+                  type="tel"
+                  required
+                  value={leadForm.phone}
+                  onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })}
+                  placeholder="+91 XXXXX XXXXX"
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="message">Message (Optional)</Label>
+              <Textarea
+                id="message"
+                data-testid="input-lead-message"
+                value={leadForm.message}
+                onChange={(e) => setLeadForm({ ...leadForm, message: e.target.value })}
+                placeholder="Any specific requirements or questions..."
+                rows={4}
+              />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseDialog}
+                data-testid="button-cancel-lead"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createLeadMutation.isPending}
+                data-testid="button-submit-lead"
+              >
+                {createLeadMutation.isPending ? "Submitting..." : "Submit Request"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
