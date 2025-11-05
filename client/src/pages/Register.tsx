@@ -14,7 +14,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<"broker" | "admin">("broker");
+  const [role, setRole] = useState<"broker" | "owner">("broker");
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const [, setLocation] = useLocation();
@@ -107,13 +107,13 @@ export default function Register() {
 
             <div className="space-y-2">
               <Label htmlFor="role">Account Type</Label>
-              <Select value={role} onValueChange={(value: "broker" | "admin") => setRole(value)}>
+              <Select value={role} onValueChange={(value: "broker" | "owner") => setRole(value)}>
                 <SelectTrigger data-testid="select-role">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="broker">Property Broker</SelectItem>
-                  <SelectItem value="admin">Super Admin</SelectItem>
+                  <SelectItem value="owner">Property Owner</SelectItem>
                 </SelectContent>
               </Select>
             </div>

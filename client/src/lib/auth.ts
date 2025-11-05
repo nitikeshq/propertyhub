@@ -25,7 +25,7 @@ export async function login(email: string, password: string): Promise<User> {
   return response.json();
 }
 
-export async function register(email: string, password: string, name: string, role: "broker" | "admin"): Promise<User> {
+export async function register(email: string, password: string, name: string, role: "broker" | "owner" | "admin"): Promise<User> {
   const response = await fetch("/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

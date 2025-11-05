@@ -5,7 +5,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Enums
-export const userRoleEnum = pgEnum("user_role", ["broker", "admin"]);
+export const userRoleEnum = pgEnum("user_role", ["broker", "owner", "admin"]);
 export const propertyTypeEnum = pgEnum("property_type", ["residential", "commercial", "land"]);
 export const propertyStatusEnum = pgEnum("property_status", ["available", "rented", "sold"]);
 export const leadStatusEnum = pgEnum("lead_status", ["new", "contacted", "in_progress", "qualified", "closed_won", "closed_lost"]);

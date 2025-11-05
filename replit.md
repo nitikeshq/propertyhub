@@ -21,7 +21,7 @@ MVP complete with enhanced landing page and INR currency support
 5. **Notifications**: Email and SMS alerts for new leads
 
 ## Database Schema
-- **users**: Broker and admin accounts with email/password auth
+- **users**: Broker, owner, and admin accounts with email/password auth
 - **properties**: Property listings with images, pricing, location details
 - **leads**: Inquiries from buyers for properties or interior design
 
@@ -44,6 +44,7 @@ MVP complete with enhanced landing page and INR currency support
 - Twilio (SMS)
 
 ## Recent Updates (November 2025)
+- **User Registration Enhancement**: Sign-up now offers "Property Broker" and "Property Owner" account types instead of allowing super admin registration
 - **Currency Localization**: All prices changed from USD to INR with proper Indian locale formatting (₹ symbol, comma separators)
 - **Landing Page Enhancement**: 
   - Hero section with professional background image and gradient overlay
