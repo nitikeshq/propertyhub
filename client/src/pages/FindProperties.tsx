@@ -48,19 +48,27 @@ export default function FindProperties() {
 
     // Filter by price range
     if (minPrice) {
-      filtered = filtered.filter((p) => p.price >= parseInt(minPrice));
+      filtered = filtered.filter((p) => {
+        // For min price filter, check if property's min or max price is >= minPrice
+        return p.priceMin >= parseInt(minPrice) || (p.priceMax && p.priceMax >= parseInt(minPrice));
+      });
     }
     if (maxPrice) {
-      filtered = filtered.filter((p) => p.price <= parseInt(maxPrice));
+      filtered = filtered.filter((p) => {
+        // For max price filter, check if property's price range falls within maxPrice
+        // If priceMax exists, use it; otherwise use priceMin
+        const maxPropertyPrice = p.priceMax || p.priceMin;
+        return maxPropertyPrice <= parseInt(maxPrice);
+      });
     }
 
     // Sort
     switch (sortBy) {
       case "price-asc":
-        filtered.sort((a, b) => a.price - b.price);
+        filtered.sort((a, b) => a.priceMin - b.priceMin);
         break;
       case "price-desc":
-        filtered.sort((a, b) => b.price - a.price);
+        filtered.sort((a, b) => b.priceMin - a.priceMin);
         break;
       case "area-asc":
         filtered.sort((a, b) => a.area - b.area);
@@ -108,12 +116,14 @@ export default function FindProperties() {
     setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(price);
+  const formatPrice = (property: Property) => {
+    if (property.listingType === 'rent') {
+      return `₹${property.priceMin.toLocaleString('en-IN')}/month`;
+    } else if (property.priceMax) {
+      return `₹${property.priceMin.toLocaleString('en-IN')} - ₹${property.priceMax.toLocaleString('en-IN')}`;
+    } else {
+      return `₹${property.priceMin.toLocaleString('en-IN')}`;
+    }
   };
 
   const createSlug = (property: Property) => {
@@ -295,8 +305,13 @@ export default function FindProperties() {
                           <span>{property.area.toLocaleString('en-IN')} sq ft</span>
                         </div>
                       </div>
-                      <div className="text-2xl font-bold text-primary" data-testid={`text-price-${property.id}`}>
-                        {formatPrice(property.price)}
+                      <div className="space-y-1">
+                        <div className="text-2xl font-bold text-primary" data-testid={`text-price-${property.id}`}>
+                          {formatPrice(property)}
+                        </div>
+                        <Badge variant="outline" className="capitalize text-xs" data-testid={`badge-listing-type-${property.id}`}>
+                          For {property.listingType}
+                        </Badge>
                       </div>
                     </CardContent>
                   </Card>

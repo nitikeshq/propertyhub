@@ -149,9 +149,19 @@ export default function PropertyDetail() {
                 <MapPin className="h-5 w-5 mr-2" />
                 <span className="text-lg">{property.location}, {property.city}, {property.state}</span>
               </div>
-              <div className="text-4xl font-bold text-primary mb-6">
-                ₹{property.price.toLocaleString('en-IN')}
-                <span className="text-xl font-normal text-muted-foreground">/month</span>
+              <div className="mb-6">
+                <div className="text-4xl font-bold text-primary">
+                  {property.listingType === 'rent' ? (
+                    <>₹{property.priceMin.toLocaleString('en-IN')}<span className="text-xl font-normal text-muted-foreground">/month</span></>
+                  ) : property.priceMax ? (
+                    <>₹{property.priceMin.toLocaleString('en-IN')} - ₹{property.priceMax.toLocaleString('en-IN')}</>
+                  ) : (
+                    <>₹{property.priceMin.toLocaleString('en-IN')}</>
+                  )}
+                </div>
+                <Badge className="mt-2 capitalize" data-testid="badge-listing-type">
+                  For {property.listingType}
+                </Badge>
               </div>
             </div>
 

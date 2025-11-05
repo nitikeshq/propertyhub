@@ -26,10 +26,11 @@ async function seed() {
 
   if (!broker) {
     console.log("⚠️  Broker already exists, fetching...");
+    const { eq } = await import("drizzle-orm");
     const [existingBroker] = await db
       .select()
       .from(users)
-      .where({ email: "broker@demo.com" as any })
+      .where(eq(users.email, "broker@demo.com"))
       .limit(1);
     
     if (existingBroker) {
