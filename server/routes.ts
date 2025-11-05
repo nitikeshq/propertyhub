@@ -81,6 +81,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     express.static('uploads')(req, res, next);
   });
 
+  // Serve static files from attached_assets directory
+  app.use('/attached_assets', (req, res, next) => {
+    const express = require('express');
+    express.static('attached_assets')(req, res, next);
+  });
+
   // Session middleware
   app.use(
     session({
